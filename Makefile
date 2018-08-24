@@ -1,6 +1,6 @@
 
 CXX = clang++
-CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow
+CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow -std=c++17
 BUILD_DIR = build
 BIN = $(BUILD_DIR)/ray
 CPP = $(wildcard *.cpp)

@@ -1,33 +1,20 @@
 #include <iostream>
-#include "Vec3.h"
-#include "Ray.h"
+#include <float.h>
+#include "Sphere.h"
+#include "HitableList.h"
 
-static float hit_sphere(const Vec3 &center, float radius, const Ray &r) {
-    Vec3 oc = r.origin() - center;
-    float a = r.direction().dot(r.direction());
-    float b = 2*oc.dot(r.direction());
-    float c = oc.dot(oc) - radius*radius;
-    float discriminant = b*b - 4*a*c;
+static Vec3 color(const Ray &r, Hitable *world) {
+    HitRecord rec;
 
-    if (discriminant >= 0) {
-        return (-b - sqrt(discriminant))/(2*a);
+    if (world->hit(r, 0.0, MAXFLOAT, rec)) {
+        return 0.5*Vec3(rec.n.x() + 1, rec.n.y() + 1, rec.n.z() + 1);
     } else {
-        return -1;
+        // Sky background.
+        Vec3 unit_direction = r.direction().unit();
+        float t = 0.5*(unit_direction.y() + 1.0);
+
+        return (1.0 - t)*Vec3(1.0, 1.0, 1.0) + t*Vec3(0.5, 0.7, 1.0);
     }
-}
-
-static Vec3 color(const Ray &r) {
-    float t = hit_sphere(Vec3(0, 0, -1), 0.5, r);
-    if (t > 0) {
-        Vec3 n = (r.point_at(t) - Vec3(0, 0, -1)).unit();
-        return 0.5*Vec3(n.x() + 1, n.y() + 1, n.z() + 1);
-    }
-
-    // Sky background.
-    Vec3 unit_direction = r.direction().unit();
-    t = 0.5*(unit_direction.y() + 1.0);
-
-    return (1.0 - t)*Vec3(1.0, 1.0, 1.0) + t*Vec3(0.5, 0.7, 1.0);
 }
 
 int main() {
@@ -39,6 +26,11 @@ int main() {
     Vec3 vertical(0.0, 2.0, 0.0);
     Vec3 origin(0.0, 0.0, 0.0);
 
+    Hitable *list[2];
+    list[0] = new Sphere(Vec3(0, 0, -1), 0.5);
+    list[1] = new Sphere(Vec3(0, -100.5, -1), 100);
+    Hitable *world = new HitableList(list, 2);
+
     std::cout << "P3 " << nx << " " << ny << " 255\n";
     for (int j = ny - 1; j >= 0; j--) {
         float v = float(j)/ny;
@@ -47,8 +39,8 @@ int main() {
             float u = float(i)/nx;
 
             Ray r(origin, lower_left_corner + u*horizontal + v*vertical);
-            Vec3 c = color(r);
 
+            Vec3 c = color(r, world);
             int ir = int(255.99*c.r());
             int ig = int(255.99*c.g());
             int ib = int(255.99*c.b());
