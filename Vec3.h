@@ -81,13 +81,14 @@ public:
         return *this;
     }
     inline Vec3 &operator/=(float t) {
-        mE[0] /= t;
-        mE[1] /= t;
-        mE[2] /= t;
+        float recip = 1/t;
+        mE[0] *= recip;
+        mE[1] *= recip;
+        mE[2] *= recip;
         return *this;
     }
     inline Vec3 unit() const {
-        return *this / length();
+        return *this/length();
     }
     inline float dot(const Vec3 &o) const {
         return mE[0]*o.mE[0] + mE[1]*o.mE[1] + mE[2]*o.mE[2];
@@ -107,7 +108,7 @@ public:
         return dot(*this);
     }
     inline void make_unit_vector() {
-        *this *= 1/length();
+        *this /= length();
     }
 };
 

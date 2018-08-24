@@ -3,6 +3,10 @@
 
 #include "Vec3.h"
 
+/**
+ * A ray with an origin and direction. The direction is not
+ * necessarily of unit length.
+ */
 class Ray {
 public:
     Vec3 mOrigin;
