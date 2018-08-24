@@ -2,24 +2,30 @@
 #include "Vec3.h"
 #include "Ray.h"
 
-static bool hit_sphere(const Vec3 &center, float radius, const Ray &r) {
+static float hit_sphere(const Vec3 &center, float radius, const Ray &r) {
     Vec3 oc = r.origin() - center;
     float a = r.direction().dot(r.direction());
     float b = 2*oc.dot(r.direction());
     float c = oc.dot(oc) - radius*radius;
     float discriminant = b*b - 4*a*c;
 
-    return discriminant >= 0;
+    if (discriminant >= 0) {
+        return (-b - sqrt(discriminant))/(2*a);
+    } else {
+        return -1;
+    }
 }
 
 static Vec3 color(const Ray &r) {
-    if (hit_sphere(Vec3(0, 0, -1), 0.5, r)) {
-        return Vec3(1, 0, 0);
+    float t = hit_sphere(Vec3(0, 0, -1), 0.5, r);
+    if (t > 0) {
+        Vec3 n = (r.point_at(t) - Vec3(0, 0, -1)).unit();
+        return 0.5*Vec3(n.x() + 1, n.y() + 1, n.z() + 1);
     }
 
     // Sky background.
     Vec3 unit_direction = r.direction().unit();
-    float t = 0.5*(unit_direction.y() + 1.0);
+    t = 0.5*(unit_direction.y() + 1.0);
 
     return (1.0 - t)*Vec3(1.0, 1.0, 1.0) + t*Vec3(0.5, 0.7, 1.0);
 }
