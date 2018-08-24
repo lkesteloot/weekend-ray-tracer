@@ -1,6 +1,6 @@
 
 CXX = clang++
-CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow
 BUILD_DIR = build
 BIN = $(BUILD_DIR)/ray
 CPP = $(wildcard *.cpp)
@@ -21,6 +21,3 @@ $(BUILD_DIR)/%.o: %.cpp
 clean:
 	rm -rf $(BUILD_DIR)
 
-# DO NOT DELETE
-
-main.o: Vec3.h
