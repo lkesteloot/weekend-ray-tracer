@@ -123,10 +123,12 @@ inline std::ostream &operator<<(std::ostream &os, const Vec3 &v) {
     os << v.mE[0] << " " << v.mE[1] << " " << v.mE[2];
     return os;
 }
-// n must be normalized, v need not be.
+// v and n must be normalized.
 inline Vec3 reflect(const Vec3 &v, const Vec3 &n) {
     return v - 2*v.dot(n)*n;
 }
+// v and n must be normalized. Returns whether refraction was possible.
+bool refract(const Vec3 &v, const Vec3 &n, float ni_over_nt, Vec3 &refracted);
 
 Vec3 random_in_unit_sphere();
 

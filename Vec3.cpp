@@ -10,3 +10,15 @@ Vec3 random_in_unit_sphere() {
 
     return p;
 }
+
+bool refract(const Vec3 &v, const Vec3 &n, float ni_over_nt, Vec3 &refracted) {
+    float dt = v.dot(n);
+    float discriminant = 1 - ni_over_nt*ni_over_nt*(1 - dt*dt);
+    if (discriminant > 0) {
+        refracted = ni_over_nt*(v - n*dt) - n*sqrt(discriminant);
+        return true;
+    }
+
+    // Total internal reflection.
+    return false;
+}
