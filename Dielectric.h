@@ -59,14 +59,14 @@ public:
 
             if (drand48() < reflection_probability) {
                 Vec3 reflected = reflect(dir, rec.n);
-                ray_out = Ray(rec.p, reflected);
+                ray_out = Ray(rec.p, reflected, ray_in.time());
             } else {
-                ray_out = Ray(rec.p, refracted);
+                ray_out = Ray(rec.p, refracted, ray_in.time());
             }
         } else {
             // Can't refract. Only reflect.
             Vec3 reflected = reflect(dir, rec.n);
-            ray_out = Ray(rec.p, reflected);
+            ray_out = Ray(rec.p, reflected, ray_in.time());
         }
 
         return true;

@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "Sphere.h"
+#include "MovingSphere.h"
 #include "HitableList.h"
 #include "Camera.h"
 #include "Lambertian.h"
@@ -12,21 +13,22 @@
 static const int WIDTH = 200*4;
 static const int HEIGHT = 100*4;
 static const int STRIDE = WIDTH*3;
+static const int BYTE_COUNT = STRIDE*HEIGHT;
 static const int SAMPLE_COUNT = 10;
 static const int THREAD_COUNT = 8;
 
 static Hitable *random_scene() {
     int n = 500;
 
-    Hitable **list = new Hitable*[n + 1];
+    Hitable **list = new Hitable*[n];
 
     int i = 0;
 
     // Ground.
     list[i++] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(Vec3(0.5, 0.5, 0.5)));
 
-    for (int a = -11; a < 11; a++) {
-        for (int b = -11; b < 11; b++) {
+    for (int a = -10; a < 10; a++) {
+        for (int b = -10; b < 10; b++) {
             float choose_mat = drand48();
 
             Vec3 center(a + 0.9*drand48(), 0.2, b + 0.9*drand48());
@@ -52,7 +54,14 @@ static Hitable *random_scene() {
                     material = new Dielectric(REF_GLASS);
                 }
 
-                list[i++] = new Sphere(center, 0.2, material);
+                Hitable *sphere;
+                if (drand48() < 0.5) {
+                    sphere = new MovingSphere(center, center + Vec3(0, 0.5*drand48(), 0),
+                            0, 1, 0.2, material);
+                } else {
+                    sphere = new Sphere(center, 0.2, material);
+                }
+                list[i++] = sphere;
             }
         }
     }
@@ -131,11 +140,11 @@ int main() {
     float aperature = 0.1;
 
     Camera cam(look_from, look_at, Vec3(0, 1, 0), 20, float(WIDTH)/HEIGHT,
-            aperature, focus_distance);
+            aperature, focus_distance, 0, 1);
 
     Hitable *world = random_scene();
 
-    unsigned char *image = new unsigned char[STRIDE*HEIGHT];
+    unsigned char *image = new unsigned char[BYTE_COUNT];
 
     // Generate the image on multiple threads.
     std::thread *thread[THREAD_COUNT];
@@ -150,9 +159,7 @@ int main() {
 
     // Write image.
     std::cout << "P6 " << WIDTH << " " << HEIGHT << " 255\n";
-    for (int i = 0; i < STRIDE*HEIGHT; i++) {
-        std::cout << image[i];
-    }
+    std::cout.write((char *) image, BYTE_COUNT);
 
     return 0;
 }

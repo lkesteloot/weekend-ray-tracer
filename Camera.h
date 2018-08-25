@@ -10,6 +10,8 @@ public:
     Vec3 m_lower_left_corner;
     Vec3 m_horizontal;
     Vec3 m_vertical;
+    float m_begin_time;
+    float m_shutter_time;
     // Axes of camera in world space.
     Vec3 m_x;
     Vec3 m_y;
@@ -18,7 +20,8 @@ public:
     // vfov is vertical in degrees.
     // aspect is width to height;
     Camera(Vec3 look_from, Vec3 look_at, Vec3 vup, float vfov, float aspect,
-            float aperature, float focus_distance) {
+            float aperature, float focus_distance, float begin_time, float end_time)
+        : m_begin_time(begin_time), m_shutter_time(end_time - begin_time) {
 
         m_lens_radius = aperature/2;
 
@@ -49,8 +52,12 @@ public:
 
         // Displacement in world space.
         Vec3 offset = m_x*rd.x() + m_y*rd.y();
+
+        // Displacement in time.
+        float time = m_begin_time + drand48()*m_shutter_time;
+
         return Ray(m_origin + offset,
-                m_lower_left_corner + u*m_horizontal + v*m_vertical - m_origin - offset);
+                m_lower_left_corner + u*m_horizontal + v*m_vertical - m_origin - offset, time);
     }
 };
 

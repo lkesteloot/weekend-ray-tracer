@@ -26,7 +26,7 @@ public:
             reflected += m_fuzz*random_in_unit_sphere();
         }
 
-        ray_out = Ray(rec.p, reflected);
+        ray_out = Ray(rec.p, reflected, ray_in.time());
         attenuation = m_albedo;
 
         return reflected.dot(rec.n) > 0;
