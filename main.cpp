@@ -2,6 +2,7 @@
 #include <float.h>
 #include "Sphere.h"
 #include "HitableList.h"
+#include "Camera.h"
 
 static Vec3 color(const Ray &r, Hitable *world) {
     HitRecord rec;
@@ -18,13 +19,10 @@ static Vec3 color(const Ray &r, Hitable *world) {
 }
 
 int main() {
-    int nx = 200;
-    int ny = 100;
+    int nx = 200*4;
+    int ny = 100*4;
 
-    Vec3 lower_left_corner(-2.0, -1.0, -1.0);
-    Vec3 horizontal(4.0, 0.0, 0.0);
-    Vec3 vertical(0.0, 2.0, 0.0);
-    Vec3 origin(0.0, 0.0, 0.0);
+    Camera cam;
 
     Hitable *list[2];
     list[0] = new Sphere(Vec3(0, 0, -1), 0.5);
@@ -38,7 +36,7 @@ int main() {
         for (int i = nx - 1; i >= 0; i--) {
             float u = float(i)/nx;
 
-            Ray r(origin, lower_left_corner + u*horizontal + v*vertical);
+            Ray r = cam.get_ray(u, v);
 
             Vec3 c = color(r, world);
             int ir = int(255.99*c.r());
