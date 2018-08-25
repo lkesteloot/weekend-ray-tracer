@@ -8,8 +8,11 @@ public:
     // Our color.
     Vec3 m_albedo;
 
-    Metal(const Vec3 &albedo)
-        : m_albedo(albedo) {
+    // How much to permute the reflection.
+    float m_fuzz;
+
+    Metal(const Vec3 &albedo, float fuzz)
+        : m_albedo(albedo), m_fuzz(fuzz) {
 
         // Nothing.
     }
@@ -18,6 +21,10 @@ public:
             Vec3 &attenuation, Ray &ray_out) const {
 
         Vec3 reflected = reflect(ray_in.direction().unit(), rec.n);
+
+        if (m_fuzz > 0) {
+            reflected += m_fuzz*random_in_unit_sphere();
+        }
 
         ray_out = Ray(rec.p, reflected);
         attenuation = m_albedo;
