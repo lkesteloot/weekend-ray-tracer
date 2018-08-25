@@ -10,6 +10,7 @@ int aabb_x_compare(const void *a, const void *b) {
 
     Aabb aabb_a, aabb_b;
 
+    // Okay to use times 0,0 here, it's only for sorting.
     if (!ah->bounding_box(0, 0, aabb_a) ||
         !bh->bounding_box(0, 0, aabb_b)) {
 
@@ -30,6 +31,7 @@ int aabb_y_compare(const void *a, const void *b) {
 
     Aabb aabb_a, aabb_b;
 
+    // Okay to use times 0,0 here, it's only for sorting.
     if (!ah->bounding_box(0, 0, aabb_a) ||
         !bh->bounding_box(0, 0, aabb_b)) {
 
@@ -50,6 +52,7 @@ int aabb_z_compare(const void *a, const void *b) {
 
     Aabb aabb_a, aabb_b;
 
+    // Okay to use times 0,0 here, it's only for sorting.
     if (!ah->bounding_box(0, 0, aabb_a) ||
         !bh->bounding_box(0, 0, aabb_b)) {
 
@@ -125,14 +128,24 @@ public:
             HitRecord left_rec, right_rec;
 
             bool hit_left = m_left->hit(r, t_min, t_max, left_rec);
-            bool hit_right = m_right->hit(r, t_min, t_max, right_rec);
-
-            if (hit_left || hit_right) {
-                rec = hit_left && (!hit_right || left_rec.t < right_rec.t) ? left_rec : right_rec;
+            if (hit_left) {
+                // If we've hit something on the left, there's no need to look
+                // past that when looking on the right.
+                bool hit_right = m_right->hit(r, t_min, left_rec.t, right_rec);
+                if (hit_right) {
+                    rec = right_rec;
+                } else {
+                    rec = left_rec;
+                }
                 return true;
-            } else {
-                return false;
             }
+
+            bool hit_right = m_right->hit(r, t_min, t_max, right_rec);
+            if (hit_right) {
+                rec = right_rec;
+            }
+
+            return hit_right;
         }
 
         return false;
