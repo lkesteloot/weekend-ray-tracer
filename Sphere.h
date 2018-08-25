@@ -5,25 +5,26 @@
 
 class Sphere : public Hitable {
 public:
-    Vec3 mCenter;
-    float mRadius;
+    Vec3 m_center;
+    float m_radius;
+    Material *m_material;
 
     Sphere() {
         // Nothing.
     }
-    Sphere(const Vec3 center, float radius)
-        : mCenter(center), mRadius(radius) {
+    Sphere(const Vec3 center, float radius, Material *material)
+        : m_center(center), m_radius(radius), m_material(material) {
 
         // Nothing.
     }
 
     virtual bool hit(const Ray &r, float t_min, float t_max, HitRecord &rec) const {
-        Vec3 oc = r.origin() - mCenter;
+        Vec3 oc = r.origin() - m_center;
 
         // Note that we halve B here, but compensate later:
         float a = r.direction().dot(r.direction());
         float b = oc.dot(r.direction()); // Should be twice this.
-        float c = oc.dot(oc) - mRadius*mRadius;
+        float c = oc.dot(oc) - m_radius*m_radius;
         // Remove 4* before a*c, so this discriminant is one fourth what it should be.
         float discriminant = b*b - a*c;
 
@@ -33,7 +34,8 @@ public:
             if (t < t_max && t > t_min) {
                 rec.t = t;
                 rec.p = r.point_at(rec.t);
-                rec.n = (rec.p - mCenter) / mRadius;
+                rec.n = (rec.p - m_center) / m_radius;
+                rec.material = m_material;
                 return true;
             }
             // Remove doubling of A to compensate for numerator being half its real value.
@@ -41,7 +43,8 @@ public:
             if (t < t_max && t > t_min) {
                 rec.t = t;
                 rec.p = r.point_at(rec.t);
-                rec.n = (rec.p - mCenter) / mRadius;
+                rec.n = (rec.p - m_center) / m_radius;
+                rec.material = m_material;
                 return true;
             }
         }

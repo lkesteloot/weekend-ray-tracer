@@ -3,6 +3,8 @@
 
 #include "Vec3.h"
 
+class Material;
+
 struct HitRecord {
     // Distance along the ray.
     float t;
@@ -12,6 +14,9 @@ struct HitRecord {
 
     // Normal, always normalized.
     Vec3 n;
+
+    // Material we hit.
+    Material *material;
 };
 
 #endif // HIT_RECORD_H

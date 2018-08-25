@@ -124,6 +124,9 @@ inline std::ostream &operator<<(std::ostream &os, const Vec3 &v) {
     return os;
 }
 
+Vec3 random_in_unit_sphere();
+
+static Vec3 VEC3_BLACK = Vec3(0, 0, 0);
 static Vec3 VEC3_ORIGIN = Vec3(0, 0, 0);
 static Vec3 VEC3_ONES = Vec3(1, 1, 1);
 
