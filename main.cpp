@@ -32,9 +32,13 @@ static Vec3 color(const Ray &r, Hitable *world, int depth) {
 int main() {
     int nx = 200*4;
     int ny = 100*4;
-    int ns = 100;
+    int ns = 1000;
 
-    Camera cam(Vec3(-2, 2, 1), Vec3(0, 0, -1), Vec3(0, 1, 0), 30, float(nx)/ny);
+    Vec3 look_from = Vec3(3, 3, 2);
+    Vec3 look_at = Vec3(0, 0, -1);
+    float focus_distance = (look_at - look_from).length();
+
+    Camera cam(look_from, look_at, Vec3(0, 1, 0), 20, float(nx)/ny, 1.2, focus_distance);
 
     Hitable *list[5];
     list[0] = new Sphere(Vec3(0, 0, -1), 0.5, new Lambertian(Vec3(0.8, 0.3, 0.3)));
