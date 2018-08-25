@@ -8,6 +8,56 @@
 #include "Metal.h"
 #include "Dielectric.h"
 
+static Hitable *random_scene() {
+    int n = 500;
+
+    Hitable **list = new Hitable*[n + 1];
+
+    int i = 0;
+
+    // Ground.
+    list[i++] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(Vec3(0.5, 0.5, 0.5)));
+
+    for (int a = -11; a < 11; a++) {
+        for (int b = -11; b < 11; b++) {
+            float choose_mat = drand48();
+
+            Vec3 center(a + 0.9*drand48(), 0.2, b + 0.9*drand48());
+
+            if ((center - Vec3(4, 0.2, 0)).length() > 0.9) {
+                Material *material;
+
+                if (choose_mat < 0.8) {
+                    // Diffuse.
+                    material = new Lambertian(Vec3(
+                                drand48()*drand48(),
+                                drand48()*drand48(),
+                                drand48()*drand48()));
+                } else if (choose_mat < 0.95) {
+                    // Metal.
+                    material = new Metal(Vec3(
+                                0.5*(1 + drand48()),
+                                0.5*(1 + drand48()),
+                                0.5*(1 + drand48())),
+                            0.5*drand48());
+                } else {
+                    // Glass.
+                    material = new Dielectric(REF_GLASS);
+                }
+
+                list[i++] = new Sphere(center, 0.2, material);
+            }
+        }
+    }
+
+    // Large spheres.
+    list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, new Dielectric(REF_GLASS));
+    list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
+    list[i++] = new Sphere(Vec3(4, 1, 0), 1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
+
+    return new HitableList(list, i);
+}
+
 static Vec3 color(const Ray &r, Hitable *world, int depth) {
     HitRecord rec;
 
@@ -32,21 +82,16 @@ static Vec3 color(const Ray &r, Hitable *world, int depth) {
 int main() {
     int nx = 200*4;
     int ny = 100*4;
-    int ns = 1000;
+    int ns = 10000;
 
-    Vec3 look_from = Vec3(3, 3, 2);
-    Vec3 look_at = Vec3(0, 0, -1);
-    float focus_distance = (look_at - look_from).length();
+    Vec3 look_from = Vec3(13, 2, 3);
+    Vec3 look_at = Vec3(0, 0, 0);
+    float focus_distance = 10;
+    float aperature = 0.1;
 
-    Camera cam(look_from, look_at, Vec3(0, 1, 0), 20, float(nx)/ny, 1.2, focus_distance);
+    Camera cam(look_from, look_at, Vec3(0, 1, 0), 20, float(nx)/ny, aperature, focus_distance);
 
-    Hitable *list[5];
-    list[0] = new Sphere(Vec3(0, 0, -1), 0.5, new Lambertian(Vec3(0.8, 0.3, 0.3)));
-    list[1] = new Sphere(Vec3(0, -100.5, -1), 100, new Lambertian(Vec3(0.8, 0.8, 0.0)));
-    list[2] = new Sphere(Vec3(1, 0, -1), 0.5, new Metal(Vec3(0.8, 0.6, 0.2), 0.3));
-    list[3] = new Sphere(Vec3(-1, 0, -1), 0.5, new Dielectric(REF_GLASS));
-    list[4] = new Sphere(Vec3(-1, 0, -1), -0.45, new Dielectric(REF_GLASS));
-    Hitable *world = new HitableList(list, 5);
+    Hitable *world = random_scene();
 
     std::cout << "P3 " << nx << " " << ny << " 255\n";
     for (int j = ny - 1; j >= 0; j--) {
