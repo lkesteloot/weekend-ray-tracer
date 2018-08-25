@@ -5,15 +5,15 @@
 
 class HitableList : public Hitable {
 public:
-    Hitable **mList;
-    int mSize;
+    Hitable **m_list;
+    int m_size;
 
     HitableList() {
         // Nothing.
     }
     // Keeps pointer to list.
     HitableList(Hitable **list, int size)
-        : mList(list), mSize(size) {
+        : m_list(list), m_size(size) {
 
         // Nothing.
     }
@@ -21,8 +21,8 @@ public:
         bool hit_anything = false;
         float closest = t_max;
 
-        for (int i = 0; i < mSize; i++) {
-            if (mList[i]->hit(r, t_min, closest, rec)) {
+        for (int i = 0; i < m_size; i++) {
+            if (m_list[i]->hit(r, t_min, closest, rec)) {
                 hit_anything = true;
                 closest = rec.t;
             }

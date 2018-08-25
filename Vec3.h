@@ -10,95 +10,95 @@
  */
 class Vec3 {
 public:
-    float mE[3];
+    float e[3];
 
     Vec3() {
         // Nothing.
     }
     Vec3(float e0, float e1, float e2) {
-        mE[0] = e0;
-        mE[1] = e1;
-        mE[2] = e2;
+        e[0] = e0;
+        e[1] = e1;
+        e[2] = e2;
     }
-    inline float x() const { return mE[0]; }
-    inline float y() const { return mE[1]; }
-    inline float z() const { return mE[2]; }
-    inline float r() const { return mE[0]; }
-    inline float g() const { return mE[1]; }
-    inline float b() const { return mE[2]; }
+    inline float x() const { return e[0]; }
+    inline float y() const { return e[1]; }
+    inline float z() const { return e[2]; }
+    inline float r() const { return e[0]; }
+    inline float g() const { return e[1]; }
+    inline float b() const { return e[2]; }
 
     inline const Vec3 &operator+() const { return *this; }
-    inline Vec3 operator-() const { return Vec3(-mE[0], -mE[1], -mE[2]); }
-    inline float operator[](int i) const { return mE[i]; }
-    inline float &operator[](int i) { return mE[i]; }
+    inline Vec3 operator-() const { return Vec3(-e[0], -e[1], -e[2]); }
+    inline float operator[](int i) const { return e[i]; }
+    inline float &operator[](int i) { return e[i]; }
 
     inline Vec3 operator+(const Vec3 &o) const {
-        return Vec3(mE[0] + o.mE[0], mE[1] + o.mE[1], mE[2] + o.mE[2]);
+        return Vec3(e[0] + o.e[0], e[1] + o.e[1], e[2] + o.e[2]);
     }
     inline Vec3 operator-(const Vec3 &o) const {
-        return Vec3(mE[0] - o.mE[0], mE[1] - o.mE[1], mE[2] - o.mE[2]);
+        return Vec3(e[0] - o.e[0], e[1] - o.e[1], e[2] - o.e[2]);
     }
     inline Vec3 operator*(const Vec3 &o) const {
-        return Vec3(mE[0]*o.mE[0], mE[1]*o.mE[1], mE[2]*o.mE[2]);
+        return Vec3(e[0]*o.e[0], e[1]*o.e[1], e[2]*o.e[2]);
     }
     inline Vec3 operator/(const Vec3 &o) const {
-        return Vec3(mE[0]/o.mE[0], mE[1]/o.mE[1], mE[2]/o.mE[2]);
+        return Vec3(e[0]/o.e[0], e[1]/o.e[1], e[2]/o.e[2]);
     }
     inline Vec3 operator*(float t) const {
-        return Vec3(mE[0]*t, mE[1]*t, mE[2]*t);
+        return Vec3(e[0]*t, e[1]*t, e[2]*t);
     }
     inline Vec3 operator/(float t) const {
-        return Vec3(mE[0]/t, mE[1]/t, mE[2]/t);
+        return Vec3(e[0]/t, e[1]/t, e[2]/t);
     }
     inline Vec3 &operator+=(const Vec3 &o) {
-        mE[0] += o.mE[0];
-        mE[1] += o.mE[1];
-        mE[2] += o.mE[2];
+        e[0] += o.e[0];
+        e[1] += o.e[1];
+        e[2] += o.e[2];
         return *this;
     }
     inline Vec3 &operator-=(const Vec3 &o) {
-        mE[0] -= o.mE[0];
-        mE[1] -= o.mE[1];
-        mE[2] -= o.mE[2];
+        e[0] -= o.e[0];
+        e[1] -= o.e[1];
+        e[2] -= o.e[2];
         return *this;
     }
     inline Vec3 &operator*=(const Vec3 &o) {
-        mE[0] *= o.mE[0];
-        mE[1] *= o.mE[1];
-        mE[2] *= o.mE[2];
+        e[0] *= o.e[0];
+        e[1] *= o.e[1];
+        e[2] *= o.e[2];
         return *this;
     }
     inline Vec3 &operator/=(const Vec3 &o) {
-        mE[0] /= o.mE[0];
-        mE[1] /= o.mE[1];
-        mE[2] /= o.mE[2];
+        e[0] /= o.e[0];
+        e[1] /= o.e[1];
+        e[2] /= o.e[2];
         return *this;
     }
     inline Vec3 &operator*=(float t) {
-        mE[0] *= t;
-        mE[1] *= t;
-        mE[2] *= t;
+        e[0] *= t;
+        e[1] *= t;
+        e[2] *= t;
         return *this;
     }
     inline Vec3 &operator/=(float t) {
         float recip = 1/t;
-        mE[0] *= recip;
-        mE[1] *= recip;
-        mE[2] *= recip;
+        e[0] *= recip;
+        e[1] *= recip;
+        e[2] *= recip;
         return *this;
     }
     inline Vec3 unit() const {
         return *this/length();
     }
     inline float dot(const Vec3 &o) const {
-        return mE[0]*o.mE[0] + mE[1]*o.mE[1] + mE[2]*o.mE[2];
+        return e[0]*o.e[0] + e[1]*o.e[1] + e[2]*o.e[2];
     }
 
     inline Vec3 cross(const Vec3 &o) {
         return Vec3(
-                mE[1]*o.mE[2] - mE[2]*o.mE[1],
-                mE[2]*o.mE[0] - mE[0]*o.mE[2],
-                mE[0]*o.mE[1] - mE[1]*o.mE[0]);
+                e[1]*o.e[2] - e[2]*o.e[1],
+                e[2]*o.e[0] - e[0]*o.e[2],
+                e[0]*o.e[1] - e[1]*o.e[0]);
     }
 
     inline float length() const {
@@ -116,11 +116,11 @@ inline Vec3 operator*(float t, const Vec3 &v) {
     return v*t;
 }
 inline std::istream &operator>>(std::istream &is, Vec3 &v) {
-    is >> v.mE[0] >> v.mE[1] >> v.mE[2];
+    is >> v.e[0] >> v.e[1] >> v.e[2];
     return is;
 }
 inline std::ostream &operator<<(std::ostream &os, const Vec3 &v) {
-    os << v.mE[0] << " " << v.mE[1] << " " << v.mE[2];
+    os << v.e[0] << " " << v.e[1] << " " << v.e[2];
     return os;
 }
 // v and n must be normalized.

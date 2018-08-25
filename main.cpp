@@ -82,7 +82,7 @@ static Vec3 color(const Ray &r, Hitable *world, int depth) {
 int main() {
     int nx = 200*4;
     int ny = 100*4;
-    int ns = 10000;
+    int ns = 100;
 
     Vec3 look_from = Vec3(13, 2, 3);
     Vec3 look_at = Vec3(0, 0, 0);

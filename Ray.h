@@ -9,20 +9,20 @@
  */
 class Ray {
 public:
-    Vec3 mOrigin;
-    Vec3 mDirection;
+    Vec3 m_origin;
+    Vec3 m_direction;
 
     Ray() {
         // Nothing.
     }
     Ray(const Vec3 &origin, const Vec3 &direction)
-        : mOrigin(origin), mDirection(direction) {
+        : m_origin(origin), m_direction(direction) {
 
         // Nothing.
     }
-    const Vec3 &origin() const { return mOrigin; }
-    const Vec3 &direction() const { return mDirection; }
-    Vec3 point_at(float t) const { return mOrigin + t*mDirection; }
+    const Vec3 &origin() const { return m_origin; }
+    const Vec3 &direction() const { return m_direction; }
+    Vec3 point_at(float t) const { return m_origin + t*m_direction; }
 };
 
 #endif // RAY_H
