@@ -1,5 +1,6 @@
 #include <iostream>
 #include <float.h>
+#include <thread>
 
 #include "Sphere.h"
 #include "HitableList.h"
@@ -7,6 +8,12 @@
 #include "Lambertian.h"
 #include "Metal.h"
 #include "Dielectric.h"
+
+static const int WIDTH = 200*4;
+static const int HEIGHT = 100*4;
+static const int STRIDE = WIDTH*3;
+static const int SAMPLE_COUNT = 10;
+static const int THREAD_COUNT = 8;
 
 static Hitable *random_scene() {
     int n = 500;
@@ -79,41 +86,72 @@ static Vec3 color(const Ray &r, Hitable *world, int depth) {
     }
 }
 
-int main() {
-    int nx = 200*4;
-    int ny = 100*4;
-    int ns = 100;
+// Trace line "j".
+static void trace_line(unsigned char *row, int j, const Camera &cam, Hitable *world) {
+    for (int i = 0; i < WIDTH; i++) {
+        // Oversample.
+        Vec3 c(0, 0, 0);
+        for (int s = 0; s < SAMPLE_COUNT; s++) {
+            float u = (i + drand48())/WIDTH;
+            float v = (j + drand48())/HEIGHT;
 
+            Ray r = cam.get_ray(u, v);
+            c += color(r, world, 0);
+        }
+        c /= SAMPLE_COUNT;
+
+        // Gamma correct.
+        c = Vec3(sqrt(c.r()), sqrt(c.g()), sqrt(c.b()));
+
+        int ir = int(255.99*c.r());
+        int ig = int(255.99*c.g());
+        int ib = int(255.99*c.b());
+        row[0] = ir;
+        row[1] = ig;
+        row[2] = ib;
+        row += 3;
+    }
+}
+
+// Trace line "start" and every "skip" lines after that.
+static void trace_lines(unsigned char *image, int start, int skip,
+        const Camera &cam, Hitable *world) {
+
+    for (int j = start; j < HEIGHT; j += skip) {
+        unsigned char *row = image + j*STRIDE;
+
+        trace_line(row, HEIGHT - 1 - j, cam, world);
+    }
+}
+
+int main() {
     Vec3 look_from = Vec3(13, 2, 3);
     Vec3 look_at = Vec3(0, 0, 0);
     float focus_distance = 10;
     float aperature = 0.1;
 
-    Camera cam(look_from, look_at, Vec3(0, 1, 0), 20, float(nx)/ny, aperature, focus_distance);
+    Camera cam(look_from, look_at, Vec3(0, 1, 0), 20, float(WIDTH)/HEIGHT,
+            aperature, focus_distance);
 
     Hitable *world = random_scene();
 
-    std::cout << "P3 " << nx << " " << ny << " 255\n";
-    for (int j = ny - 1; j >= 0; j--) {
-        for (int i = 0; i < nx; i++) {
-            Vec3 c(0, 0, 0);
-            for (int s = 0; s < ns; s++) {
-                float u = (i + drand48())/nx;
-                float v = (j + drand48())/ny;
+    unsigned char *image = new unsigned char[STRIDE*HEIGHT];
 
-                Ray r = cam.get_ray(u, v);
-                c += color(r, world, 0);
-            }
-            c /= ns;
+    // Generate the image on multiple threads.
+    std::thread *thread[THREAD_COUNT];
+    for (int t = 0; t < THREAD_COUNT; t++) {
+        thread[t] = new std::thread(trace_lines, image, t, THREAD_COUNT, cam, world);
+    }
+    for (int t = 0; t < THREAD_COUNT; t++) {
+        thread[t]->join();
+        delete thread[t];
+        thread[t] = 0;
+    }
 
-            // Gamma correct.
-            c = Vec3(sqrt(c.r()), sqrt(c.g()), sqrt(c.b()));
-
-            int ir = int(255.99*c.r());
-            int ig = int(255.99*c.g());
-            int ib = int(255.99*c.b());
-            std::cout << ir << " " << ig << " " << ib << "\n";
-        }
+    // Write image.
+    std::cout << "P6 " << WIDTH << " " << HEIGHT << " 255\n";
+    for (int i = 0; i < STRIDE*HEIGHT; i++) {
+        std::cout << image[i];
     }
 
     return 0;

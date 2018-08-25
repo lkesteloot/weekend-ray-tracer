@@ -38,7 +38,7 @@ public:
         m_vertical = 2*half_height*focus_distance*m_y;
     }
 
-    Ray get_ray(float u, float v) {
+    Ray get_ray(float u, float v) const {
         // Compute random displacement.
         Vec3 rd;
         if (m_lens_radius == 0) {
