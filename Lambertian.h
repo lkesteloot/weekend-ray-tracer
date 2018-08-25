@@ -14,7 +14,7 @@ public:
         // Nothing.
     }
 
-    virtual bool scatter(const Ray &ray_in, const HitRecord &rec,
+    virtual bool scatter(const Ray &, const HitRecord &rec,
             Vec3 &attenuation, Ray &ray_out) const {
 
         Vec3 target = rec.p + rec.n + random_in_unit_sphere();

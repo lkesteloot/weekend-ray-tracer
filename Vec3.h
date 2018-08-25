@@ -123,6 +123,10 @@ inline std::ostream &operator<<(std::ostream &os, const Vec3 &v) {
     os << v.mE[0] << " " << v.mE[1] << " " << v.mE[2];
     return os;
 }
+// n must be normalized, v need not be.
+inline Vec3 reflect(const Vec3 &v, const Vec3 &n) {
+    return v - 2*v.dot(n)*n;
+}
 
 Vec3 random_in_unit_sphere();
 
