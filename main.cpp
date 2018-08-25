@@ -9,15 +9,16 @@
 #include "Lambertian.h"
 #include "Metal.h"
 #include "Dielectric.h"
+#include "Bvh.h"
 
 static const int WIDTH = 200*4;
 static const int HEIGHT = 100*4;
 static const int STRIDE = WIDTH*3;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
-static const int SAMPLE_COUNT = 10;
+static const int SAMPLE_COUNT = 100;
 static const int THREAD_COUNT = 8;
 
-static Hitable *random_scene() {
+static Hitable *random_scene(float time0, float time1) {
     int n = 500;
 
     Hitable **list = new Hitable*[n];
@@ -71,7 +72,7 @@ static Hitable *random_scene() {
     list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
     list[i++] = new Sphere(Vec3(4, 1, 0), 1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
 
-    return new HitableList(list, i);
+    return new Bvh(list, i, time0, time1);
 }
 
 static Vec3 color(const Ray &r, Hitable *world, int depth) {
@@ -138,11 +139,13 @@ int main() {
     Vec3 look_at = Vec3(0, 0, 0);
     float focus_distance = 10;
     float aperature = 0.1;
+    float time0 = 0;
+    float time1 = 1;
 
     Camera cam(look_from, look_at, Vec3(0, 1, 0), 20, float(WIDTH)/HEIGHT,
-            aperature, focus_distance, 0, 1);
+            aperature, focus_distance, time0, time1);
 
-    Hitable *world = random_scene();
+    Hitable *world = random_scene(time0, time1);
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 

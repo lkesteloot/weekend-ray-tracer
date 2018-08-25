@@ -51,6 +51,12 @@ public:
     
         return false;
     }
+
+    virtual bool bounding_box(float, float, Aabb &aabb) const {
+        Vec3 radius = Vec3(m_radius, m_radius, m_radius);
+        aabb = Aabb(m_center - radius, m_center + radius);
+        return true;
+    }
 };
 
 #endif // SPHERE_H

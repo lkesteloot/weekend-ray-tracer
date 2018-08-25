@@ -110,6 +110,18 @@ public:
     inline void make_unit_vector() {
         *this /= length();
     }
+    inline Vec3 min(const Vec3 &o) const {
+        return Vec3(
+                fmin(e[0], o.e[0]),
+                fmin(e[1], o.e[1]),
+                fmin(e[2], o.e[2]));
+    }
+    inline Vec3 max(const Vec3 &o) const {
+        return Vec3(
+                fmax(e[0], o.e[0]),
+                fmax(e[1], o.e[1]),
+                fmax(e[2], o.e[2]));
+    }
 };
 
 inline Vec3 operator*(float t, const Vec3 &v) {

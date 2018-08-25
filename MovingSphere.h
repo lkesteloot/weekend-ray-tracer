@@ -60,6 +60,17 @@ public:
         return false;
     }
 
+    virtual bool bounding_box(float t0, float t1, Aabb &aabb) const {
+        // Union of AABBs of both spheres.
+        Vec3 radius = Vec3(m_radius, m_radius, m_radius);
+        Aabb aabb0 = Aabb(center_at_time(t0) - radius, center_at_time(t0) + radius);
+        Aabb aabb1 = Aabb(center_at_time(t1) - radius, center_at_time(t1) + radius);
+
+        aabb = aabb0.union_with(aabb1);
+
+        return true;
+    }
+
 private:
     Vec3 center_at_time(float time) const {
         return m_initial_center + (time - m_initial_time)/m_delta_time*m_delta_center;

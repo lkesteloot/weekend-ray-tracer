@@ -30,6 +30,28 @@ public:
 
         return hit_anything;
     }
+
+    virtual bool bounding_box(float t0, float t1, Aabb &aabb) const {
+        if (m_size == 0) {
+            return false;
+        }
+
+        for (int i = 0; i < m_size; i++) {
+            Aabb this_aabb;
+
+            if (m_list[i]->bounding_box(t0, t1, this_aabb)) {
+                if (i == 0) {
+                    aabb = this_aabb;
+                } else {
+                    aabb = aabb.union_with(this_aabb);
+                }
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
 };
 
 
