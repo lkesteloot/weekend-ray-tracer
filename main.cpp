@@ -21,6 +21,7 @@ static Vec3 color(const Ray &r, Hitable *world) {
 int main() {
     int nx = 200*4;
     int ny = 100*4;
+    int ns = 100;
 
     Camera cam;
 
@@ -31,14 +32,17 @@ int main() {
 
     std::cout << "P3 " << nx << " " << ny << " 255\n";
     for (int j = ny - 1; j >= 0; j--) {
-        float v = float(j)/ny;
-
         for (int i = nx - 1; i >= 0; i--) {
-            float u = float(i)/nx;
+            Vec3 c(0, 0, 0);
+            for (int s = 0; s < ns; s++) {
+                float u = (i + drand48())/nx;
+                float v = (j + drand48())/ny;
 
-            Ray r = cam.get_ray(u, v);
+                Ray r = cam.get_ray(u, v);
+                c += color(r, world);
+            }
+            c /= ns;
 
-            Vec3 c = color(r, world);
             int ir = int(255.99*c.r());
             int ig = int(255.99*c.g());
             int ib = int(255.99*c.b());

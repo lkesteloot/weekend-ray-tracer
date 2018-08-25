@@ -1,6 +1,6 @@
 
 CXX = clang++
-CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow -std=c++17
+CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow -std=c++17 -O3
 BUILD_DIR = build
 BIN = $(BUILD_DIR)/ray
 CPP = $(wildcard *.cpp)
@@ -13,7 +13,7 @@ $(BIN): $(OBJ) Makefile
 
 -include $(DEP)
 
-$(BUILD_DIR)/%.o: %.cpp
+$(BUILD_DIR)/%.o: %.cpp Makefile
 	mkdir -p $(@D)
 	$(CXX) $(CXX_FLAGS) -MMD -c $< -o $@
 
