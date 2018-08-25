@@ -4,11 +4,22 @@
 #include "HitableList.h"
 #include "Camera.h"
 
+static Vec3 random_in_unit_sphere() {
+    Vec3 p;
+
+    do {
+        p = 2.0*Vec3(drand48(), drand48(), drand48()) - VEC3_ONES;
+    } while (p.squared_length() > 1.0);
+
+    return p;
+}
+
 static Vec3 color(const Ray &r, Hitable *world) {
     HitRecord rec;
 
-    if (world->hit(r, 0.0, MAXFLOAT, rec)) {
-        return 0.5*Vec3(rec.n.x() + 1, rec.n.y() + 1, rec.n.z() + 1);
+    if (world->hit(r, 0.001, MAXFLOAT, rec)) {
+        Vec3 target = rec.p + rec.n + random_in_unit_sphere();
+        return 0.5*color(Ray(rec.p, target - rec.p), world);
     } else {
         // Sky background.
         Vec3 unit_direction = r.direction().unit();
@@ -42,6 +53,9 @@ int main() {
                 c += color(r, world);
             }
             c /= ns;
+
+            // Gamma correct.
+            c = Vec3(sqrt(c.r()), sqrt(c.g()), sqrt(c.b()));
 
             int ir = int(255.99*c.r());
             int ig = int(255.99*c.g());

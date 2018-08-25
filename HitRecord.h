@@ -4,8 +4,13 @@
 #include "Vec3.h"
 
 struct HitRecord {
+    // Distance along the ray.
     float t;
+
+    // Intersection point.
     Vec3 p;
+
+    // Normal, always normalized.
     Vec3 n;
 };
 
