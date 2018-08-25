@@ -131,6 +131,8 @@ inline Vec3 reflect(const Vec3 &v, const Vec3 &n) {
 bool refract(const Vec3 &v, const Vec3 &n, float ni_over_nt, Vec3 &refracted);
 
 Vec3 random_in_unit_sphere();
+// In XY plane.
+Vec3 random_in_unit_disc();
 
 static Vec3 VEC3_BLACK = Vec3(0, 0, 0);
 static Vec3 VEC3_ORIGIN = Vec3(0, 0, 0);
