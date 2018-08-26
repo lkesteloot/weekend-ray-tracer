@@ -2,14 +2,14 @@
 #define LAMBERTIAN_H
 
 #include "Material.h"
+#include "Texture.h"
 
 class Lambertian : public Material {
 public:
-    // Our color.
-    Vec3 m_albedo;
+    Texture *m_texture;
 
-    Lambertian(const Vec3 &albedo)
-        : m_albedo(albedo) {
+    Lambertian(Texture *texture)
+        : m_texture(texture) {
 
         // Nothing.
     }
@@ -20,7 +20,7 @@ public:
         Vec3 target = rec.p + rec.n + random_in_unit_sphere();
 
         ray_out = Ray(rec.p, target - rec.p, ray_in.time());
-        attenuation = m_albedo;
+        attenuation = m_texture->value(0, 0, rec.p);
 
         return true;
     }

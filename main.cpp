@@ -10,12 +10,13 @@
 #include "Metal.h"
 #include "Dielectric.h"
 #include "Bvh.h"
+#include "ConstantTexture.h"
 
 static const int WIDTH = 200*4;
 static const int HEIGHT = 100*4;
 static const int STRIDE = WIDTH*3;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
-static const int SAMPLE_COUNT = 100;
+static const int SAMPLE_COUNT = 10;
 static const int THREAD_COUNT = 8;
 
 static Hitable *random_scene(float time0, float time1) {
@@ -26,7 +27,8 @@ static Hitable *random_scene(float time0, float time1) {
     int i = 0;
 
     // Ground.
-    list[i++] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(Vec3(0.5, 0.5, 0.5)));
+    list[i++] = new Sphere(Vec3(0, -1000, 0), 1000,
+            new Lambertian(new ConstantTexture(Vec3(0.5, 0.5, 0.5))));
 
     for (int a = -10; a < 10; a++) {
         for (int b = -10; b < 10; b++) {
@@ -39,10 +41,10 @@ static Hitable *random_scene(float time0, float time1) {
 
                 if (choose_mat < 0.8) {
                     // Diffuse.
-                    material = new Lambertian(Vec3(
+                    material = new Lambertian(new ConstantTexture(Vec3(
                                 drand48()*drand48(),
                                 drand48()*drand48(),
-                                drand48()*drand48()));
+                                drand48()*drand48())));
                 } else if (choose_mat < 0.95) {
                     // Metal.
                     material = new Metal(Vec3(
@@ -69,7 +71,8 @@ static Hitable *random_scene(float time0, float time1) {
 
     // Large spheres.
     list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, new Dielectric(REF_GLASS));
-    list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
+    list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0,
+            new Lambertian(new ConstantTexture(Vec3(0.4, 0.2, 0.1))));
     list[i++] = new Sphere(Vec3(4, 1, 0), 1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
 
     return new Bvh(list, i, time0, time1);
