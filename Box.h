@@ -15,15 +15,14 @@ public:
     Box(const Vec3 &min, const Vec3 &max, Material *material)
         : m_min(min), m_max(max) {
 
-        Hitable **list = new Hitable*[6];
-        int i = 0;
-        list[i++] = new XyRect(min.x(), max.x(), min.y(), max.y(), max.z(), material);
-        list[i++] = new FlipNormals(new XyRect(min.x(), max.x(), min.y(), max.y(), min.z(), material));
-        list[i++] = new XzRect(min.x(), max.x(), min.z(), max.z(), max.y(), material);
-        list[i++] = new FlipNormals(new XzRect(min.x(), max.x(), min.z(), max.z(), min.y(), material));
-        list[i++] = new YzRect(min.y(), max.y(), min.z(), max.z(), max.x(), material);
-        list[i++] = new FlipNormals(new YzRect(min.y(), max.y(), min.z(), max.z(), min.x(), material));
-        m_sides = new HitableList(list, i);
+        HitableList *list = new HitableList;
+        list->add(new XyRect(min.x(), max.x(), min.y(), max.y(), max.z(), material));
+        list->add(new FlipNormals(new XyRect(min.x(), max.x(), min.y(), max.y(), min.z(), material)));
+        list->add(new XzRect(min.x(), max.x(), min.z(), max.z(), max.y(), material));
+        list->add(new FlipNormals(new XzRect(min.x(), max.x(), min.z(), max.z(), min.y(), material)));
+        list->add(new YzRect(min.y(), max.y(), min.z(), max.z(), max.x(), material));
+        list->add(new FlipNormals(new YzRect(min.y(), max.y(), min.z(), max.z(), min.x(), material)));
+        m_sides = list;
     }
 
     virtual bool hit(const Ray &r, float t_min, float t_max, HitRecord &rec) const {

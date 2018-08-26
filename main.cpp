@@ -25,7 +25,7 @@ static const int WIDTH = 400;
 static const int HEIGHT = 400;
 static const int STRIDE = WIDTH*3;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
-static const int SAMPLE_COUNT = 1000;
+static const int SAMPLE_COUNT = 100;
 static const int THREAD_COUNT = 8;
 
 /*
@@ -78,24 +78,23 @@ static Hitable *final_scene(float time0, float time1) {
 
     Material *light = new DiffuseLight(new ConstantTexture(Vec3(7, 7, 7)));
 
-    Hitable **list = new Hitable*[30];
-    int l = 0;
-    list[l++] = new Bvh(box_list, b, time0, time1);
-    list[l++] = new XzRect(123, 423, 147, 412, 554, light);
+    HitableList *list = new HitableList;
+    list->add(new Bvh(box_list, b, time0, time1));
+    list->add(new XzRect(123, 423, 147, 412, 554, light));
 
     Vec3 center(400, 400, 200);
-    list[l++] = new MovingSphere(center, center + Vec3(0, 30, 0), 0, 1, 50,
-            new Lambertian(new ConstantTexture(Vec3(0.7, 0.3, 0.1))));
-    list[l++] = new Sphere(Vec3(260, 150, 45), 50, new Dielectric(REF_GLASS));
-    list[l++] = new Sphere(Vec3(0, 150, 145), 50, new Metal(Vec3(0.8, 0.8, 0.9), 1.0));
+    list->add(new MovingSphere(center, center + Vec3(0, 30, 0), 0, 1, 50,
+            new Lambertian(new ConstantTexture(Vec3(0.7, 0.3, 0.1)))));
+    list->add(new Sphere(Vec3(260, 150, 45), 50, new Dielectric(REF_GLASS)));
+    list->add(new Sphere(Vec3(0, 150, 145), 50, new Metal(Vec3(0.8, 0.8, 0.9), 1.0)));
     Hitable *boundary = new Sphere(Vec3(360, 150, 145), 70, new Dielectric(REF_GLASS));
-    list[l++] = boundary;
-    list[l++] = new ConstantMedium(boundary, 0.2, new ConstantTexture(Vec3(0.2, 0.4, 0.9)));
+    list->add(boundary);
+    list->add(new ConstantMedium(boundary, 0.2, new ConstantTexture(Vec3(0.2, 0.4, 0.9))));
     boundary = new Sphere(Vec3(0, 0, 0), 5000, new Dielectric(REF_GLASS));
-    list[l++] = new ConstantMedium(boundary, 0.0001, new ConstantTexture(Vec3(1, 1, 1)));
-    list[l++] = new Sphere(Vec3(400, 200, 400), 100,
-            new Lambertian(new ImageTexture("data/earthmap.jpg")));
-    list[l++] = new Sphere(Vec3(220, 280, 300), 80, new Lambertian(new NoiseTexture(0.1)));
+    list->add(new ConstantMedium(boundary, 0.0001, new ConstantTexture(Vec3(1, 1, 1))));
+    list->add(new Sphere(Vec3(400, 200, 400), 100,
+            new Lambertian(new ImageTexture("data/earthmap.jpg"))));
+    list->add(new Sphere(Vec3(220, 280, 300), 80, new Lambertian(new NoiseTexture(0.1))));
 
     // Random spheres packed into a box shape.
     int sphere_count = 1000;
@@ -103,11 +102,17 @@ static Hitable *final_scene(float time0, float time1) {
     for (int j = 0; j < sphere_count; j++) {
         sphere_list[j] = new Sphere(Vec3(165*my_rand(), 165*my_rand(), 165*my_rand()), 10, white);
     }
-    list[l++] = new Translate(new RotateY(new Bvh(sphere_list, sphere_count, time0, time1), 15),
-            Vec3(-100, 270, 395));
+    list->add(new Translate(new RotateY(new Bvh(sphere_list, sphere_count, time0, time1), 15),
+            Vec3(-100, 270, 395)));
 
-    return new HitableList(list, l);
+    return list;
 }
+
+/*
+static Hitable *marble_scene(float time0, float time1) {
+    Hitable **list[128];
+}
+*/
 
 static Vec3 trace_ray(const Ray &r, Hitable *world, int depth) {
     HitRecord rec;
@@ -173,7 +178,10 @@ static void trace_lines(unsigned char *image, int start, int skip,
         unsigned char *row = image + j*STRIDE;
 
         trace_line(row, HEIGHT - 1 - j, cam, world);
-        /// std::cerr << j << "\n";
+
+        if (SAMPLE_COUNT > 100 || j % 100 == 0) {
+            std::cerr << j << "\n";
+        }
     }
 }
 

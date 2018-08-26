@@ -1,11 +1,12 @@
 
 CXX = clang++
-CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow -std=c++17 -O3
+CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow -std=c++17 -O3 -ffast-math
 BUILD_DIR = build
 BIN = $(BUILD_DIR)/ray
 CPP = $(wildcard *.cpp)
 OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
 DEP = $(OBJ:%.o=%.d)
+IMG = out.ppm
 
 $(BIN): $(OBJ) Makefile
 	mkdir -p $(@D)
@@ -21,3 +22,5 @@ $(BUILD_DIR)/%.o: %.cpp Makefile
 clean:
 	rm -rf $(BUILD_DIR)
 
+$(IMG): $(BIN)
+	$(BIN) > $(IMG) && touch $(IMG)
