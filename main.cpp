@@ -12,6 +12,7 @@
 #include "Bvh.h"
 #include "ConstantTexture.h"
 #include "CheckerTexture.h"
+#include "NoiseTexture.h"
 
 static const int WIDTH = 200*4;
 static const int HEIGHT = 100*4;
@@ -81,7 +82,16 @@ static Hitable *random_scene(float time0, float time1) {
     return new Bvh(list, i, time0, time1);
 }
 
-static Vec3 color(const Ray &r, Hitable *world, int depth) {
+static Hitable *two_perlin_spheres() {
+    Texture *perlin = new NoiseTexture(4);
+
+    Hitable **list = new Hitable*[2];
+    list[0] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(perlin));
+    list[1] = new Sphere(Vec3(0, 2, 0), 2, new Lambertian(perlin));
+    return new HitableList(list, 2);
+}
+
+static Vec3 trace_ray(const Ray &r, Hitable *world, int depth) {
     HitRecord rec;
 
     if (world->hit(r, 0.001, MAXFLOAT, rec)) {
@@ -89,7 +99,7 @@ static Vec3 color(const Ray &r, Hitable *world, int depth) {
         Vec3 attenuation;
 
         if (depth < 50 && rec.material->scatter(r, rec, attenuation, scattered)) {
-            return attenuation*color(scattered, world, depth + 1);
+            return attenuation*trace_ray(scattered, world, depth + 1);
         } else {
             return VEC3_BLACK;
         }
@@ -112,7 +122,7 @@ static void trace_line(unsigned char *row, int j, const Camera &cam, Hitable *wo
             float v = (j + drand48())/HEIGHT;
 
             Ray r = cam.get_ray(u, v);
-            c += color(r, world, 0);
+            c += trace_ray(r, world, 0);
         }
         c /= SAMPLE_COUNT;
 
@@ -144,14 +154,15 @@ int main() {
     Vec3 look_from = Vec3(13, 2, 3);
     Vec3 look_at = Vec3(0, 0, 0);
     float focus_distance = 10;
-    float aperature = 0.1;
+    float aperature = 0.0;
     float time0 = 0;
     float time1 = 1;
 
     Camera cam(look_from, look_at, Vec3(0, 1, 0), 20, float(WIDTH)/HEIGHT,
             aperature, focus_distance, time0, time1);
 
-    Hitable *world = random_scene(time0, time1);
+    // Hitable *world = random_scene();
+    Hitable *world = two_perlin_spheres();
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 
