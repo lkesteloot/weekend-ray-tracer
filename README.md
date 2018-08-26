@@ -13,6 +13,8 @@ The code is almost a copy of the original in Peter Shirley's books.
 
 The `stb_image.h` image-reading header is from [this repo](https://github.com/nothings/stb).
 
+Texture map of earth from [NASA](http://superstarfloraluk.com/3333698-NASA-Eath-of-Textures.html).
+
 # License
 
 Copyright 2018 Lawrence Kesteloot
