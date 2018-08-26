@@ -11,12 +11,13 @@
 #include "Dielectric.h"
 #include "Bvh.h"
 #include "ConstantTexture.h"
+#include "CheckerTexture.h"
 
 static const int WIDTH = 200*4;
 static const int HEIGHT = 100*4;
 static const int STRIDE = WIDTH*3;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
-static const int SAMPLE_COUNT = 10;
+static const int SAMPLE_COUNT = 100;
 static const int THREAD_COUNT = 8;
 
 static Hitable *random_scene(float time0, float time1) {
@@ -27,8 +28,10 @@ static Hitable *random_scene(float time0, float time1) {
     int i = 0;
 
     // Ground.
-    list[i++] = new Sphere(Vec3(0, -1000, 0), 1000,
-            new Lambertian(new ConstantTexture(Vec3(0.5, 0.5, 0.5))));
+    Texture *checker1 = new ConstantTexture(Vec3(0.2, 0.3, 0.1));
+    Texture *checker2 = new ConstantTexture(Vec3(0.9, 0.9, 0.9));
+    Texture *checker = new CheckerTexture(checker1, checker2, .3);
+    list[i++] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(checker));
 
     for (int a = -10; a < 10; a++) {
         for (int b = -10; b < 10; b++) {
