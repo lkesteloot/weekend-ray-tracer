@@ -19,6 +19,7 @@
 #include "FlipNormals.h"
 #include "Box.h"
 #include "Transform.h"
+#include "ConstantMedium.h"
 
 static const int WIDTH = 400;
 static const int HEIGHT = 400;
@@ -33,19 +34,21 @@ static Hitable *cornell_box() {
     Material *red = new Lambertian(new ConstantTexture(Vec3(0.65, 0.05, 0.05)));
     Material *white = new Lambertian(new ConstantTexture(Vec3(0.73, 0.73, 0.73)));
     Material *green = new Lambertian(new ConstantTexture(Vec3(0.12, 0.45, 0.15)));
-    Material *light = new DiffuseLight(new ConstantTexture(Vec3(15, 15, 15)));
+    Material *light = new DiffuseLight(new ConstantTexture(Vec3(7, 7, 7)));
 
     int i = 0;
     list[i++] = new FlipNormals(new YzRect(0, 555, 0, 555, 555, green));    // Left
     list[i++] = new YzRect(0, 555, 0, 555, 0, red);                         // Right
-    list[i++] = new XzRect(213, 343, 227, 332, 554, light);                 // Light
+    list[i++] = new XzRect(113, 443, 127, 432, 554, light);                 // Light
     list[i++] = new FlipNormals(new XzRect(0, 555, 0, 555, 555, white));    // Ceiling
     list[i++] = new XzRect(0, 555, 0, 555, 0, white);                       // Floor
     list[i++] = new FlipNormals(new XyRect(0, 555, 0, 555, 555, white));    // Back
-    list[i++] = new Translate(new RotateY(new Box(Vec3(0, 0, 0), Vec3(165, 165, 165), white),
+    Hitable *b1 = new Translate(new RotateY(new Box(Vec3(0, 0, 0), Vec3(165, 165, 165), white),
                 -18), Vec3(130, 0, 65));
-    list[i++] = new Translate(new RotateY(new Box(Vec3(0, 0, 0), Vec3(165, 330, 165), white),
+    Hitable *b2 = new Translate(new RotateY(new Box(Vec3(0, 0, 0), Vec3(165, 330, 165), white),
                 15), Vec3(265, 0, 295));
+    list[i++] = new ConstantMedium(b1, 0.01, new ConstantTexture(Vec3(1, 1, 1)));
+    list[i++] = new ConstantMedium(b2, 0.01, new ConstantTexture(Vec3(0, 0, 0)));
     return new HitableList(list, i);
 }
 
