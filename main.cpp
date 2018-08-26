@@ -25,7 +25,7 @@ static const int WIDTH = 400;
 static const int HEIGHT = 400;
 static const int STRIDE = WIDTH*3;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
-static const int SAMPLE_COUNT = 100;
+static const int SAMPLE_COUNT = 1000;
 static const int THREAD_COUNT = 8;
 
 /*
@@ -173,6 +173,7 @@ static void trace_lines(unsigned char *image, int start, int skip,
         unsigned char *row = image + j*STRIDE;
 
         trace_line(row, HEIGHT - 1 - j, cam, world);
+        /// std::cerr << j << "\n";
     }
 }
 

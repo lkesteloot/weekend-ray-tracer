@@ -7,6 +7,12 @@ The tag `book1` generates this image:
 
 ![book1](images/book1.png)
 
+# Book 2: Ray Tracing: The Next Week
+
+The tag `book2` generates this image:
+
+![book2](images/book2.png)
+
 # Attributions
 
 The code is almost a copy of the original in Peter Shirley's books.
