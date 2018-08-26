@@ -18,7 +18,7 @@ public:
     virtual Vec3 value(float, float, const Vec3 &p) const {
         //return Vec3(1, 1, 1)*0.5*(1 + perlin_noise(m_scale*p));
         //return Vec3(1, 1, 1)*perlin_turb(m_scale*p, 7);
-        return Vec3(1, 1, 1)*0.5*(1 + sin(m_scale*p.z() + 10*perlin_turb(p, 7)));
+        return Vec3(1, 1, 1)*0.5*(1 + sin(m_scale*p.x() + 5*perlin_turb(m_scale*p, 7)));
     }
 };
 

@@ -25,9 +25,10 @@ static const int WIDTH = 400;
 static const int HEIGHT = 400;
 static const int STRIDE = WIDTH*3;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
-static const int SAMPLE_COUNT = 1000;
+static const int SAMPLE_COUNT = 100;
 static const int THREAD_COUNT = 8;
 
+/*
 static Hitable *cornell_box() {
     Hitable **list = new Hitable*[8];
 
@@ -50,6 +51,62 @@ static Hitable *cornell_box() {
     list[i++] = new ConstantMedium(b1, 0.01, new ConstantTexture(Vec3(1, 1, 1)));
     list[i++] = new ConstantMedium(b2, 0.01, new ConstantTexture(Vec3(0, 0, 0)));
     return new HitableList(list, i);
+}
+*/
+
+static Hitable *final_scene(float time0, float time1) {
+    int nb = 20;
+
+    Material *white = new Lambertian(new ConstantTexture(Vec3(0.73, 0.73, 0.73)));
+    Material *ground = new Lambertian(new ConstantTexture(Vec3(0.48, 0.83, 0.53)));
+
+    // Floor boxes.
+    Hitable **box_list = new Hitable*[nb*nb];
+    int b = 0;
+    for (int i = 0; i < nb; i++) {
+        for (int j = 0; j < nb; j++) {
+            float width = 100;
+            float x0 = -1000 + i*width;
+            float y0 = 0;
+            float z0 = -1000 + j*width;
+            float x1 = x0 + width;
+            float y1 = 100*(my_rand() + 0.01);
+            float z1 = z0 + width;
+            box_list[b++] = new Box(Vec3(x0, y0, z0), Vec3(x1, y1, z1), ground);
+        }
+    }
+
+    Material *light = new DiffuseLight(new ConstantTexture(Vec3(7, 7, 7)));
+
+    Hitable **list = new Hitable*[30];
+    int l = 0;
+    list[l++] = new Bvh(box_list, b, time0, time1);
+    list[l++] = new XzRect(123, 423, 147, 412, 554, light);
+
+    Vec3 center(400, 400, 200);
+    list[l++] = new MovingSphere(center, center + Vec3(0, 30, 0), 0, 1, 50,
+            new Lambertian(new ConstantTexture(Vec3(0.7, 0.3, 0.1))));
+    list[l++] = new Sphere(Vec3(260, 150, 45), 50, new Dielectric(REF_GLASS));
+    list[l++] = new Sphere(Vec3(0, 150, 145), 50, new Metal(Vec3(0.8, 0.8, 0.9), 1.0));
+    Hitable *boundary = new Sphere(Vec3(360, 150, 145), 70, new Dielectric(REF_GLASS));
+    list[l++] = boundary;
+    list[l++] = new ConstantMedium(boundary, 0.2, new ConstantTexture(Vec3(0.2, 0.4, 0.9)));
+    boundary = new Sphere(Vec3(0, 0, 0), 5000, new Dielectric(REF_GLASS));
+    list[l++] = new ConstantMedium(boundary, 0.0001, new ConstantTexture(Vec3(1, 1, 1)));
+    list[l++] = new Sphere(Vec3(400, 200, 400), 100,
+            new Lambertian(new ImageTexture("data/earthmap.jpg")));
+    list[l++] = new Sphere(Vec3(220, 280, 300), 80, new Lambertian(new NoiseTexture(0.1)));
+
+    // Random spheres packed into a box shape.
+    int sphere_count = 1000;
+    Hitable **sphere_list = new Hitable*[sphere_count];
+    for (int j = 0; j < sphere_count; j++) {
+        sphere_list[j] = new Sphere(Vec3(165*my_rand(), 165*my_rand(), 165*my_rand()), 10, white);
+    }
+    list[l++] = new Translate(new RotateY(new Bvh(sphere_list, sphere_count, time0, time1), 15),
+            Vec3(-100, 270, 395));
+
+    return new HitableList(list, l);
 }
 
 static Vec3 trace_ray(const Ray &r, Hitable *world, int depth) {
@@ -120,7 +177,7 @@ static void trace_lines(unsigned char *image, int start, int skip,
 }
 
 int main() {
-    Vec3 look_from = Vec3(278, 278, -800);
+    Vec3 look_from = Vec3(478, 278, -600);
     Vec3 look_at = Vec3(278, 278, 0);
     float focus_distance = 10;
     float aperature = 0.0;
@@ -131,7 +188,7 @@ int main() {
     Camera cam(look_from, look_at, Vec3(0, 1, 0), vfov, float(WIDTH)/HEIGHT,
             aperature, focus_distance, time0, time1);
 
-    Hitable *world = cornell_box();
+    Hitable *world = final_scene(time0, time1);
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 
