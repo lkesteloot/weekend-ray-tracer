@@ -15,7 +15,8 @@
 #include "NoiseTexture.h"
 #include "ImageTexture.h"
 #include "DiffuseLight.h"
-#include "XyRect.h"
+#include "Rect.h"
+#include "FlipNormals.h"
 
 static const int WIDTH = 200*4;
 static const int HEIGHT = 100*4;
@@ -24,15 +25,22 @@ static const int BYTE_COUNT = STRIDE*HEIGHT;
 static const int SAMPLE_COUNT = 1000;
 static const int THREAD_COUNT = 8;
 
-static Hitable *simple_light() {
-    Texture *perlin = new NoiseTexture(4);
+static Hitable *cornell_box() {
+    Hitable **list = new Hitable*[6];
 
-    Hitable **list = new Hitable*[4];
-    list[0] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(perlin));
-    list[1] = new Sphere(Vec3(0, 2, 0), 2, new Lambertian(perlin));
-    list[2] = new Sphere(Vec3(0, 7, 0), 2, new DiffuseLight(new ConstantTexture(Vec3(4, 4, 4))));
-    list[3] = new XyRect(3, 5, 1, 3, -2, new DiffuseLight(new ConstantTexture(Vec3(4, 4, 4))));
-    return new HitableList(list, 4);
+    Material *red = new Lambertian(new ConstantTexture(Vec3(0.65, 0.05, 0.05)));
+    Material *white = new Lambertian(new ConstantTexture(Vec3(0.73, 0.73, 0.73)));
+    Material *green = new Lambertian(new ConstantTexture(Vec3(0.12, 0.45, 0.15)));
+    Material *light = new DiffuseLight(new ConstantTexture(Vec3(15, 15, 15)));
+
+    int i = 0;
+    list[i++] = new FlipNormals(new YzRect(0, 555, 0, 555, 555, green));    // Left
+    list[i++] = new YzRect(0, 555, 0, 555, 0, red);                         // Right
+    list[i++] = new XzRect(213, 343, 227, 332, 554, light);                 // Light
+    list[i++] = new FlipNormals(new XzRect(0, 555, 0, 555, 555, white));    // Ceiling
+    list[i++] = new XzRect(0, 555, 0, 555, 0, white);                       // Floor
+    list[i++] = new FlipNormals(new XyRect(0, 555, 0, 555, 555, white));    // Back
+    return new HitableList(list, i);
 }
 
 static Vec3 trace_ray(const Ray &r, Hitable *world, int depth) {
@@ -100,17 +108,18 @@ static void trace_lines(unsigned char *image, int start, int skip,
 }
 
 int main() {
-    Vec3 look_from = Vec3(23, 6, 3);
-    Vec3 look_at = Vec3(0, 2, 0);
+    Vec3 look_from = Vec3(278, 278, -800);
+    Vec3 look_at = Vec3(278, 278, 0);
     float focus_distance = 10;
     float aperature = 0.0;
+    float vfov = 40;
     float time0 = 0;
     float time1 = 1;
 
-    Camera cam(look_from, look_at, Vec3(0, 1, 0), 20, float(WIDTH)/HEIGHT,
+    Camera cam(look_from, look_at, Vec3(0, 1, 0), vfov, float(WIDTH)/HEIGHT,
             aperature, focus_distance, time0, time1);
 
-    Hitable *world = simple_light();
+    Hitable *world = cornell_box();
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 
