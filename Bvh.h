@@ -77,7 +77,7 @@ public:
 
     Bvh(Hitable **list, int size, float t0, float t1) {
         // Pick random axis to sort on.
-        int axis = int(3*drand48());
+        int axis = int(3*my_rand());
         switch (axis) {
             case 0:
                 qsort(list, size, sizeof(Hitable *), aabb_x_compare);

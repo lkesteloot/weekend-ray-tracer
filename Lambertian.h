@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "Texture.h"
 
+// Diffuse material.
 class Lambertian : public Material {
 public:
     Texture *m_texture;

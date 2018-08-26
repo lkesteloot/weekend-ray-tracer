@@ -54,7 +54,7 @@ public:
         Vec3 offset = m_x*rd.x() + m_y*rd.y();
 
         // Displacement in time.
-        float time = m_begin_time + drand48()*m_shutter_time;
+        float time = m_begin_time + my_rand()*m_shutter_time;
 
         return Ray(m_origin + offset,
                 m_lower_left_corner + u*m_horizontal + v*m_vertical - m_origin - offset, time);

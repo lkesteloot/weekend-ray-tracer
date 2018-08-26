@@ -146,6 +146,10 @@ Vec3 random_in_unit_sphere();
 // In XY plane.
 Vec3 random_in_unit_disc();
 
+// Thread-safe version of drand48(). Returns [0,1).
+float my_rand();
+void init_rand(int seed);
+
 static Vec3 VEC3_BLACK = Vec3(0, 0, 0);
 static Vec3 VEC3_ORIGIN = Vec3(0, 0, 0);
 static Vec3 VEC3_ONES = Vec3(1, 1, 1);

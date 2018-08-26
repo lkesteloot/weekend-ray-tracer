@@ -1,13 +1,26 @@
 
 #include "Vec3.h"
 
-static Vec3 VEC_XY_ONES = Vec3(1, 1, 0);
+static Vec3 VEC3_XY_ONES = Vec3(1, 1, 0);
+
+// Thread-local state for our random number generator.
+thread_local unsigned short g_xsubi[3];
+
+void init_rand(int seed) {
+    g_xsubi[0] = seed;
+    g_xsubi[1] = seed;
+    g_xsubi[2] = seed;
+}
+
+float my_rand() {
+    return erand48(g_xsubi);
+}
 
 Vec3 random_in_unit_sphere() {
     Vec3 p;
 
     do {
-        p = 2.0*Vec3(drand48(), drand48(), drand48()) - VEC3_ONES;
+        p = 2.0*Vec3(my_rand(), my_rand(), my_rand()) - VEC3_ONES;
     } while (p.squared_length() > 1.0);
 
     return p;
@@ -17,7 +30,7 @@ Vec3 random_in_unit_disc() {
     Vec3 p;
 
     do {
-        p = 2.0*Vec3(drand48(), drand48(), 0) - VEC_XY_ONES;
+        p = 2.0*Vec3(my_rand(), my_rand(), 0) - VEC3_XY_ONES;
     } while (p.squared_length() > 1.0);
 
     return p;

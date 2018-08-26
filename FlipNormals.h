@@ -3,6 +3,7 @@
 
 #include "Hitable.h"
 
+// Wraps a hittable and reverses its normal.
 class FlipNormals : public Hitable {
 public:
     Hitable *m_hitable;

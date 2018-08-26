@@ -23,9 +23,9 @@ static Vec3 *generate_vecs() {
 
     for (int i = 0; i < GRID_SIZE; i++) {
         v[i] = Vec3(
-                -1 + 2*drand48(),
-                -1 + 2*drand48(),
-                -1 + 2*drand48()).unit();
+                -1 + 2*my_rand(),
+                -1 + 2*my_rand(),
+                -1 + 2*my_rand()).unit();
     }
 
     return v;
@@ -41,7 +41,7 @@ static int *generate_permutation() {
 
     // Then permute it.
     for (int i = GRID_SIZE - 1; i > 0; i--) {
-        int j = int(drand48()*(i + 1));
+        int j = int(my_rand()*(i + 1));
 
         std::swap(perm[i], perm[j]);
     }

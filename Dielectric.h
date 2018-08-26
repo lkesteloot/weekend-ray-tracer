@@ -57,7 +57,7 @@ public:
             // We can refract. Figure out if we should.
             float reflection_probability = schlick(cosine, m_refraction_index);
 
-            if (drand48() < reflection_probability) {
+            if (my_rand() < reflection_probability) {
                 Vec3 reflected = reflect(dir, rec.n);
                 ray_out = Ray(rec.p, reflected, ray_in.time());
             } else {

@@ -133,7 +133,7 @@ public:
         rec.t = t;
         rec.material = m_material;
         rec.p = p;
-        rec.n = Vec3(0, 0, 1);
+        rec.n = Vec3(0, 1, 0);
 
         return true;
     }

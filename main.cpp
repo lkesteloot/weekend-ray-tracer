@@ -18,11 +18,11 @@
 #include "Rect.h"
 #include "FlipNormals.h"
 
-static const int WIDTH = 200*4;
-static const int HEIGHT = 100*4;
+static const int WIDTH = 400;
+static const int HEIGHT = 400;
 static const int STRIDE = WIDTH*3;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
-static const int SAMPLE_COUNT = 1000;
+static const int SAMPLE_COUNT = 100;
 static const int THREAD_COUNT = 8;
 
 static Hitable *cornell_box() {
@@ -72,8 +72,8 @@ static void trace_line(unsigned char *row, int j, const Camera &cam, Hitable *wo
         // Oversample.
         Vec3 c(0, 0, 0);
         for (int s = 0; s < SAMPLE_COUNT; s++) {
-            float u = (i + drand48())/WIDTH;
-            float v = (j + drand48())/HEIGHT;
+            float u = (i + my_rand())/WIDTH;
+            float v = (j + my_rand())/HEIGHT;
 
             Ray r = cam.get_ray(u, v);
             c += trace_ray(r, world, 0);
@@ -98,7 +98,10 @@ static void trace_line(unsigned char *row, int j, const Camera &cam, Hitable *wo
 
 // Trace line "start" and every "skip" lines after that.
 static void trace_lines(unsigned char *image, int start, int skip,
-        const Camera &cam, Hitable *world) {
+        const Camera &cam, Hitable *world, int seed) {
+
+    // Initialize the seed for our thread.
+    init_rand(seed);
 
     for (int j = start; j < HEIGHT; j += skip) {
         unsigned char *row = image + j*STRIDE;
@@ -126,7 +129,7 @@ int main() {
     // Generate the image on multiple threads.
     std::thread *thread[THREAD_COUNT];
     for (int t = 0; t < THREAD_COUNT; t++) {
-        thread[t] = new std::thread(trace_lines, image, t, THREAD_COUNT, cam, world);
+        thread[t] = new std::thread(trace_lines, image, t, THREAD_COUNT, cam, world, random());
     }
     for (int t = 0; t < THREAD_COUNT; t++) {
         thread[t]->join();
