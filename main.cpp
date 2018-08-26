@@ -17,6 +17,7 @@
 #include "DiffuseLight.h"
 #include "Rect.h"
 #include "FlipNormals.h"
+#include "Box.h"
 
 static const int WIDTH = 400;
 static const int HEIGHT = 400;
@@ -26,7 +27,7 @@ static const int SAMPLE_COUNT = 100;
 static const int THREAD_COUNT = 8;
 
 static Hitable *cornell_box() {
-    Hitable **list = new Hitable*[6];
+    Hitable **list = new Hitable*[8];
 
     Material *red = new Lambertian(new ConstantTexture(Vec3(0.65, 0.05, 0.05)));
     Material *white = new Lambertian(new ConstantTexture(Vec3(0.73, 0.73, 0.73)));
@@ -40,6 +41,8 @@ static Hitable *cornell_box() {
     list[i++] = new FlipNormals(new XzRect(0, 555, 0, 555, 555, white));    // Ceiling
     list[i++] = new XzRect(0, 555, 0, 555, 0, white);                       // Floor
     list[i++] = new FlipNormals(new XyRect(0, 555, 0, 555, 555, white));    // Back
+    list[i++] = new Box(Vec3(130, 0, 65), Vec3(295, 165, 230), white);
+    list[i++] = new Box(Vec3(265, 0, 295), Vec3(430, 330, 460), white);
     return new HitableList(list, i);
 }
 
