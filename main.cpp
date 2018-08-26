@@ -13,6 +13,7 @@
 #include "ConstantTexture.h"
 #include "CheckerTexture.h"
 #include "NoiseTexture.h"
+#include "ImageTexture.h"
 
 static const int WIDTH = 200*4;
 static const int HEIGHT = 100*4;
@@ -82,12 +83,13 @@ static Hitable *random_scene(float time0, float time1) {
     return new Bvh(list, i, time0, time1);
 }
 
-static Hitable *two_perlin_spheres() {
+static Hitable *earth_scene() {
     Texture *perlin = new NoiseTexture(4);
+    Texture *earth = new ImageTexture("data/earthmap.jpg");
 
     Hitable **list = new Hitable*[2];
     list[0] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(perlin));
-    list[1] = new Sphere(Vec3(0, 2, 0), 2, new Lambertian(perlin));
+    list[1] = new Sphere(Vec3(0, 2, 0), 2, new Lambertian(earth));
     return new HitableList(list, 2);
 }
 
@@ -152,7 +154,7 @@ static void trace_lines(unsigned char *image, int start, int skip,
 
 int main() {
     Vec3 look_from = Vec3(13, 2, 3);
-    Vec3 look_at = Vec3(0, 0, 0);
+    Vec3 look_at = Vec3(0, 1.5, 0);
     float focus_distance = 10;
     float aperature = 0.0;
     float time0 = 0;
@@ -162,7 +164,7 @@ int main() {
             aperature, focus_distance, time0, time1);
 
     // Hitable *world = random_scene();
-    Hitable *world = two_perlin_spheres();
+    Hitable *world = earth_scene();
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 

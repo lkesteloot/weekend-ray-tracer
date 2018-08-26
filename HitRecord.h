@@ -15,6 +15,10 @@ struct HitRecord {
     // Normal, always normalized.
     Vec3 n;
 
+    // 2D texture coordinate.
+    float u;
+    float v;
+
     // Material we hit.
     Material *material;
 };

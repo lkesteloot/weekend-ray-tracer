@@ -7,6 +7,12 @@ The tag `book1` generates this image:
 
 ![book1](images/book1.png)
 
+# Attributions
+
+The code is almost a copy of the original in Peter Shirley's books.
+
+The `stb_image.h` image-reading header is from [this repo](https://github.com/nothings/stb).
+
 # License
 
 Copyright 2018 Lawrence Kesteloot

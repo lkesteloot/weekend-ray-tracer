@@ -20,7 +20,7 @@ public:
         Vec3 target = rec.p + rec.n + random_in_unit_sphere();
 
         ray_out = Ray(rec.p, target - rec.p, ray_in.time());
-        attenuation = m_texture->value(0, 0, rec.p);
+        attenuation = m_texture->value(rec.u, rec.v, rec.p);
 
         return true;
     }

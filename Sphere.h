@@ -3,6 +3,15 @@
 
 #include "Hitable.h"
 
+// Convert normalized point on sphere to polar coordinates.
+static void get_sphere_uv(const Vec3 &p, float &u, float &v) {
+    float phi = atan2(p.z(), p.x());
+    float theta = asin(p.y());
+
+    u = 1 - (phi + M_PI) / (2*M_PI);
+    v = (theta + M_PI/2) / M_PI;
+}
+
 class Sphere : public Hitable {
 public:
     Vec3 m_center;
@@ -36,6 +45,7 @@ public:
                 rec.p = r.point_at(rec.t);
                 rec.n = (rec.p - m_center) / m_radius;
                 rec.material = m_material;
+                get_sphere_uv(rec.n, rec.u, rec.v);
                 return true;
             }
             // Remove doubling of A to compensate for numerator being half its real value.
@@ -45,6 +55,7 @@ public:
                 rec.p = r.point_at(rec.t);
                 rec.n = (rec.p - m_center) / m_radius;
                 rec.material = m_material;
+                get_sphere_uv(rec.n, rec.u, rec.v);
                 return true;
             }
         }
