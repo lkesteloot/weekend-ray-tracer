@@ -126,7 +126,7 @@ static Hitable *final_scene(float time0, float time1) {
 }
 */
 
-static Hitable *marble_scene(Camera &cam) {
+static Hitable *marble_scene(Camera &cam, int frame) {
     int room_width = 3000;
     int room_height = 2500;
     int table_width = 1000;
@@ -143,8 +143,11 @@ static Hitable *marble_scene(Camera &cam) {
     Material *light = new DiffuseLight(new ConstantTexture(Vec3(2, 2, 2)));
     Material *marble = new Dielectric(REF_GLASS);
 
+    float t = frame*2*M_PI/60;
+    float s = sin(t);
+    float c = cos(t);
     Vec3 look_at = Vec3(0, table_height + marble_radius, 0);
-    Vec3 look_from = look_at + Vec3(0, 40, 50);
+    Vec3 look_from = look_at + c*Vec3(0, 0, 50) + s*Vec3(50, 0, 0) + Vec3(0, 40, 0);
     float focus_distance = (look_at - look_from).length();
     float aperature = 0.0;
     float vfov = 20;
@@ -269,22 +272,35 @@ static void trace_lines(unsigned char *image, int start, int skip, int sample_co
     g_working--;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    int frame = 0;
+    const char *output_pathname = "out.png";
+    bool batch = false;
+    int sample_count = 1;
+
+    if (argc == 4) {
+        frame = atoi(argv[1]);
+        output_pathname = argv[2];
+        sample_count = atoi(argv[3]);
+        batch = true;
+    }
+
     g_quit = false;
 
     Camera cam;
-    Hitable *world = marble_scene(cam);
+    Hitable *world = marble_scene(cam, frame);
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 
 #ifdef DISPLAY
-    if (!mfb_open("ray", WIDTH, HEIGHT)) {
-        std::cerr << "Failed to open the display.\n";
-        return 0;
+    if (!batch) {
+        if (!mfb_open("ray", WIDTH, HEIGHT)) {
+            std::cerr << "Failed to open the display.\n";
+            return 0;
+        }
     }
 #endif
 
-    int sample_count = 1;
     while (!g_quit) {
         g_working = THREAD_COUNT;
 
@@ -299,13 +315,15 @@ int main() {
         }
 
 #ifdef DISPLAY
-        while (g_working > 0) {
-            int state = mfb_update(image);
-            if (state < 0) {
-                // Tell workers to quit.
-                g_quit = true;
-            } else {
-                usleep(30*1000);
+        if (!batch) {
+            while (g_working > 0) {
+                int state = mfb_update(image);
+                if (state < 0) {
+                    // Tell workers to quit.
+                    g_quit = true;
+                } else {
+                    usleep(30*1000);
+                }
             }
         }
 #endif
@@ -334,7 +352,7 @@ int main() {
             }
 
             // Write image.
-            int success = stbi_write_png("out.png", WIDTH, HEIGHT, 3, rgb_image, WIDTH*3);
+            int success = stbi_write_png(output_pathname, WIDTH, HEIGHT, 3, rgb_image, WIDTH*3);
             if (!success) {
                 std::cerr << "Cannot write output image.\n";
             }
@@ -342,8 +360,13 @@ int main() {
             std::cerr << "Pass with " << sample_count << " samples took " <<
                 std::fixed << std::setprecision(1) << pass_timer.elapsed() << " seconds.\n";
 
-            // Do another pass with more samples.
-            sample_count *= 10;
+            if (batch) {
+                // We're done.
+                g_quit = true;
+            } else {
+                // Do another pass with more samples.
+                sample_count *= 10;
+            }
         }
     }
 
