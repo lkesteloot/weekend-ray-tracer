@@ -2,6 +2,7 @@
 #include <float.h>
 #include <thread>
 #include <unistd.h>
+#include <chrono>
 
 #ifdef DISPLAY
 #include "MiniFB.h"
@@ -26,13 +27,14 @@
 #include "Transform.h"
 #include "ConstantMedium.h"
 
+using namespace std::chrono;
+
 static const int WIDTH = 400;
 static const int HEIGHT = 400;
 static const int BYTES_PER_PIXEL = 4;
 static const int STRIDE = WIDTH*BYTES_PER_PIXEL;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
 static const int PIXEL_COUNT = WIDTH*HEIGHT;
-static const int SAMPLE_COUNT = 100;
 static const int THREAD_COUNT = 8;
 
 // Whether to quit the program.
@@ -207,18 +209,18 @@ static Vec3 trace_ray(const Ray &r, Hitable *world, int depth) {
 }
 
 // Trace line "j".
-static void trace_line(unsigned char *row, int j, const Camera &cam, Hitable *world) {
+static void trace_line(unsigned char *row, int j, int sample_count, const Camera &cam, Hitable *world) {
     for (int i = 0; i < WIDTH; i++) {
         // Oversample.
         Vec3 c(0, 0, 0);
-        for (int s = 0; s < SAMPLE_COUNT; s++) {
+        for (int s = 0; s < sample_count; s++) {
             float u = (i + my_rand())/WIDTH;
             float v = (j + my_rand())/HEIGHT;
 
             Ray r = cam.get_ray(u, v);
             c += trace_ray(r, world, 0);
         }
-        c /= SAMPLE_COUNT;
+        c /= sample_count;
 
         // Gamma correct.
         c = Vec3(sqrt(c.r()), sqrt(c.g()), sqrt(c.b()));
@@ -239,7 +241,7 @@ static void trace_line(unsigned char *row, int j, const Camera &cam, Hitable *wo
 }
 
 // Trace line "start" and every "skip" lines after that.
-static void trace_lines(unsigned char *image, int start, int skip,
+static void trace_lines(unsigned char *image, int start, int skip, int sample_count,
         const Camera &cam, Hitable *world, int seed) {
 
     // Initialize the seed for our thread.
@@ -248,11 +250,11 @@ static void trace_lines(unsigned char *image, int start, int skip,
     for (int j = start; j < HEIGHT && !g_quit; j += skip) {
         unsigned char *row = image + j*STRIDE;
 
-        trace_line(row, HEIGHT - 1 - j, cam, world);
+        trace_line(row, HEIGHT - 1 - j, sample_count, cam, world);
 
 #ifndef DISPLAY
         // Progress output.
-        if (SAMPLE_COUNT > 100 || j % 100 == 0) {
+        if (sample_count > 100 || j % 100 == 0) {
             std::cerr << j << "\n";
         }
 #endif
@@ -277,50 +279,66 @@ int main() {
     }
 #endif
 
-    g_working = THREAD_COUNT;
+    int sample_count = 1;
+    while (!g_quit) {
+        g_working = THREAD_COUNT;
 
-    // Generate the image on multiple threads.
-    std::thread *thread[THREAD_COUNT];
-    for (int t = 0; t < THREAD_COUNT; t++) {
-        thread[t] = new std::thread(trace_lines, image, t, THREAD_COUNT, cam, world, random());
-    }
+        // Time this pass.
+        steady_clock::time_point clock_begin = steady_clock::now();
+
+        // Generate the image on multiple threads.
+        std::thread *thread[THREAD_COUNT];
+        for (int t = 0; t < THREAD_COUNT; t++) {
+            thread[t] = new std::thread(trace_lines, image, t, THREAD_COUNT, sample_count,
+                    cam, world, random());
+        }
 
 #ifdef DISPLAY
-    while (g_working > 0) {
-        int state = mfb_update(image);
-        if (state < 0) {
-            // Tell workers to quit.
-            g_quit = true;
-        } else {
-            usleep(30*1000);
+        while (g_working > 0) {
+            int state = mfb_update(image);
+            if (state < 0) {
+                // Tell workers to quit.
+                g_quit = true;
+            } else {
+                usleep(30*1000);
+            }
         }
-    }
 #endif
 
-    // Wait for worker threads to quit.
-    for (int t = 0; t < THREAD_COUNT; t++) {
-        thread[t]->join();
-        delete thread[t];
-        thread[t] = 0;
+        // Wait for worker threads to quit.
+        for (int t = 0; t < THREAD_COUNT; t++) {
+            thread[t]->join();
+            delete thread[t];
+            thread[t] = 0;
+        }
+
+        // Convert from RGBA to RGB.
+        const int RGB_BYTE_COUNT = PIXEL_COUNT*3;
+        unsigned char *rgb_image = new unsigned char[RGB_BYTE_COUNT];
+        unsigned char *rgba = image;
+        unsigned char *rgb = rgb_image;
+        for (int i = 0; i < PIXEL_COUNT; i++) {
+            rgb[0] = rgba[2];
+            rgb[1] = rgba[1];
+            rgb[2] = rgba[0];
+
+            rgba += 4;
+            rgb += 3;
+        }
+
+        // Write image.
+        std::cout << "P6 " << WIDTH << " " << HEIGHT << " 255\n";
+        std::cout.write((char *) rgb_image, RGB_BYTE_COUNT);
+
+        steady_clock::time_point clock_end = steady_clock::now();
+        steady_clock::duration time_span = clock_end - clock_begin;
+        double seconds = double(time_span.count())*steady_clock::period::num/
+            steady_clock::period::den;
+        std::cerr << "Pass with " << sample_count << " samples took " << seconds << "\n";
+
+        // Do another pass with more samples.
+        sample_count *= 10;
     }
-
-    // Convert from RGBA to RGB.
-    const int RGB_BYTE_COUNT = PIXEL_COUNT*3;
-    unsigned char *rgb_image = new unsigned char[RGB_BYTE_COUNT];
-    unsigned char *rgba = image;
-    unsigned char *rgb = rgb_image;
-    for (int i = 0; i < PIXEL_COUNT; i++) {
-        rgb[0] = rgba[2];
-        rgb[1] = rgba[1];
-        rgb[2] = rgba[0];
-
-        rgba += 4;
-        rgb += 3;
-    }
-
-    // Write image.
-    std::cout << "P6 " << WIDTH << " " << HEIGHT << " 255\n";
-    std::cout.write((char *) rgb_image, RGB_BYTE_COUNT);
 
     return 0;
 }
