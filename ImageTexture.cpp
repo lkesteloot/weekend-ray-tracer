@@ -23,6 +23,12 @@ unsigned char *load_image(char const *pathname, int &width, int &height) {
     int components;
 
     unsigned char *image = stbi_load(pathname, &width, &height, &components, 0);
+
+    if (image == nullptr) {
+        std::cerr << "Couldn't load image from " << pathname << "\n";
+        return 0;
+    }
+
     if (components != 3) {
         std::cerr << "Can't handle images with " << components << " components.\n";
         return 0;
