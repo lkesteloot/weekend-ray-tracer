@@ -2,11 +2,12 @@
 #include <float.h>
 #include <thread>
 #include <unistd.h>
-#include <chrono>
 
 #ifdef DISPLAY
 #include "MiniFB.h"
 #endif
+
+#include "stb_image_write.h"
 
 #include "Sphere.h"
 #include "MovingSphere.h"
@@ -26,8 +27,7 @@
 #include "Box.h"
 #include "Transform.h"
 #include "ConstantMedium.h"
-
-using namespace std::chrono;
+#include "Timer.h"
 
 static const int WIDTH = 400;
 static const int HEIGHT = 400;
@@ -284,7 +284,7 @@ int main() {
         g_working = THREAD_COUNT;
 
         // Time this pass.
-        steady_clock::time_point clock_begin = steady_clock::now();
+        Timer pass_timer;
 
         // Generate the image on multiple threads.
         std::thread *thread[THREAD_COUNT];
@@ -312,32 +312,34 @@ int main() {
             thread[t] = 0;
         }
 
-        // Convert from RGBA to RGB.
-        const int RGB_BYTE_COUNT = PIXEL_COUNT*3;
-        unsigned char *rgb_image = new unsigned char[RGB_BYTE_COUNT];
-        unsigned char *rgba = image;
-        unsigned char *rgb = rgb_image;
-        for (int i = 0; i < PIXEL_COUNT; i++) {
-            rgb[0] = rgba[2];
-            rgb[1] = rgba[1];
-            rgb[2] = rgba[0];
+        // Save the image if we weren't interrupted by the user.
+        if (!g_quit) {
+            // Convert from RGBA to RGB.
+            const int RGB_BYTE_COUNT = PIXEL_COUNT*3;
+            unsigned char *rgb_image = new unsigned char[RGB_BYTE_COUNT];
+            unsigned char *rgba = image;
+            unsigned char *rgb = rgb_image;
+            for (int i = 0; i < PIXEL_COUNT; i++) {
+                rgb[0] = rgba[2];
+                rgb[1] = rgba[1];
+                rgb[2] = rgba[0];
 
-            rgba += 4;
-            rgb += 3;
+                rgba += 4;
+                rgb += 3;
+            }
+
+            // Write image.
+            int success = stbi_write_png("out.png", WIDTH, HEIGHT, 3, rgb_image, WIDTH*3);
+            if (!success) {
+                std::cerr << "Cannot write output image.\n";
+            }
+
+            std::cerr << "Pass with " << sample_count << " samples took " <<
+                pass_timer.elapsed() << " seconds.\n";
+
+            // Do another pass with more samples.
+            sample_count *= 10;
         }
-
-        // Write image.
-        std::cout << "P6 " << WIDTH << " " << HEIGHT << " 255\n";
-        std::cout.write((char *) rgb_image, RGB_BYTE_COUNT);
-
-        steady_clock::time_point clock_end = steady_clock::now();
-        steady_clock::duration time_span = clock_end - clock_begin;
-        double seconds = double(time_span.count())*steady_clock::period::num/
-            steady_clock::period::den;
-        std::cerr << "Pass with " << sample_count << " samples took " << seconds << "\n";
-
-        // Do another pass with more samples.
-        sample_count *= 10;
     }
 
     return 0;

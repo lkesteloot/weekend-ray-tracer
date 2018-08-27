@@ -17,9 +17,12 @@ The tag `book2` generates this image:
 
 The code is almost a copy of the original in Peter Shirley's books.
 
-The `stb_image.h` image-reading header is from [this repo](https://github.com/nothings/stb).
+The `stb_image.h` and `stb_image_write.h` image reading and writing headers are
+from [nothings](https://github.com/nothings/stb).
 
 Texture map of earth from [NASA](http://superstarfloraluk.com/3333698-NASA-Eath-of-Textures.html).
+
+MiniFB is from [emoon](https://github.com/emoon/minifb).
 
 # License
 

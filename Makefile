@@ -6,7 +6,6 @@ BIN = $(BUILD_DIR)/ray
 CPP = $(wildcard *.cpp)
 OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
 DEP = $(OBJ:%.o=%.d)
-IMG = out.ppm
 LIBS = -lm
 LDFLAGS =
 
@@ -15,7 +14,7 @@ CXX_FLAGS += -DDISPLAY -Iminifb
 LIBS += -lminifb -framework Cocoa
 LDFLAGS += -Lminifb/build
 
-$(BIN): $(OBJ) Makefile
+$(BIN): $(OBJ) minifb/build/libminifb.a Makefile
 	mkdir -p $(@D)
 	$(CXX) $(CXX_FLAGS) $(LDFLAGS) $(OBJ) -o $(BIN) $(LIBS)
 
@@ -29,5 +28,6 @@ $(BUILD_DIR)/%.o: %.cpp Makefile
 clean:
 	rm -rf $(BUILD_DIR)
 
-$(IMG): $(BIN)
-	time $(BIN) > $(IMG) && touch $(IMG)
+.PHONY: run
+run: $(BIN)
+	time $(BIN)
