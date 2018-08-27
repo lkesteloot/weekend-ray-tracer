@@ -23,4 +23,4 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 $(IMG): $(BIN)
-	$(BIN) > $(IMG) && touch $(IMG)
+	time $(BIN) > $(IMG) && touch $(IMG)

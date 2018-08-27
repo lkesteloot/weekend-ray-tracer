@@ -25,7 +25,7 @@ static const int WIDTH = 400;
 static const int HEIGHT = 400;
 static const int STRIDE = WIDTH*3;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
-static const int SAMPLE_COUNT = 100;
+static const int SAMPLE_COUNT = 1000;
 static const int THREAD_COUNT = 8;
 
 /*
@@ -54,6 +54,7 @@ static Hitable *cornell_box() {
 }
 */
 
+/*
 static Hitable *final_scene(float time0, float time1) {
     int nb = 20;
 
@@ -107,12 +108,67 @@ static Hitable *final_scene(float time0, float time1) {
 
     return list;
 }
-
-/*
-static Hitable *marble_scene(float time0, float time1) {
-    Hitable **list[128];
-}
 */
+
+static Hitable *marble_scene(Camera &cam) {
+    int room_width = 3000;
+    int room_height = 2500;
+    int table_width = 1000;
+    int table_height = 1000;
+    int marble_radius = 5;
+    int window_size = 800;
+    int window_height = 1000;
+    int window_spacing = 200;
+    int window_position = room_width/2 - 10;
+
+    Material *wall = new Lambertian(new ConstantTexture(Vec3(0.73, 0.73, 0.73)));
+    Material *table = new Lambertian(new ConstantTexture(Vec3(0.73, 0.73, 0.73)));
+    table = new Metal(Vec3(0.73, 0.73, 0.73), 0.5);
+    Material *light = new DiffuseLight(new ConstantTexture(Vec3(2, 2, 2)));
+    Material *marble = new Dielectric(REF_GLASS);
+
+    Vec3 look_at = Vec3(0, table_height + marble_radius, 0);
+    Vec3 look_from = look_at + Vec3(0, 40, 50);
+    float focus_distance = (look_at - look_from).length();
+    float aperature = 0.0;
+    float vfov = 20;
+    float time0 = 0;
+    float time1 = 1;
+
+    cam = Camera(look_from, look_at, Vec3(0, 1, 0), vfov, float(WIDTH)/HEIGHT,
+            aperature, focus_distance, time0, time1);
+
+    Hitable *sphere = new Sphere(look_at, 10, marble);
+
+    HitableList *list = new HitableList;
+    // Walls.
+    list->add(new XyRect(-room_width/2, room_width/2, 0, room_height, -room_width/2, wall));
+    list->add(new FlipNormals(new XyRect(-room_width/2, room_width/2, 0, room_height, room_width/2, wall)));
+    list->add(new YzRect(0, room_height, -room_width/2, room_width/2, -room_width/2, wall));
+    list->add(new FlipNormals(new YzRect(0, room_height, -room_width/2, room_width/2, room_width/2, wall)));
+    list->add(new XzRect(-room_width/2, room_width/2, -room_width/2, room_width/2, 0, wall));
+    list->add(new FlipNormals(new XzRect(-room_width/2, room_width/2, -room_width/2, room_width/2, room_height, wall)));
+
+    // Table.
+    list->add(new XzRect(-table_width/2, table_width/2, -table_width/2, table_width/2, table_height, table));
+
+    // Marble.
+    if (false) {
+        list->add(sphere);
+        list->add(new ConstantMedium(sphere, 0.2, new ConstantTexture(Vec3(0.6, 0.4, 0.9))));
+    } else {
+        Material *matte = new Metal(Vec3(0.6, 0.4, 0.9), 0.1);
+        list->add(new Sphere(look_at, marble_radius, matte));
+    }
+
+    // Windows.
+    list->add(new YzRect(window_height, window_height + window_size, -window_size - window_spacing/2, -window_spacing/2, window_position, light));
+    list->add(new YzRect(window_height, window_height + window_size, window_spacing/2, window_spacing/2 + window_size, window_position, light));
+    list->add(new XyRect(-window_size - window_spacing/2, -window_spacing/2, window_height, window_height + window_size, -window_position, light));
+    list->add(new XyRect(window_spacing/2, window_spacing/2 + window_size, window_height, window_height + window_size, -window_position, light));
+
+    return list;
+}
 
 static Vec3 trace_ray(const Ray &r, Hitable *world, int depth) {
     HitRecord rec;
@@ -186,18 +242,8 @@ static void trace_lines(unsigned char *image, int start, int skip,
 }
 
 int main() {
-    Vec3 look_from = Vec3(478, 278, -600);
-    Vec3 look_at = Vec3(278, 278, 0);
-    float focus_distance = 10;
-    float aperature = 0.0;
-    float vfov = 40;
-    float time0 = 0;
-    float time1 = 1;
-
-    Camera cam(look_from, look_at, Vec3(0, 1, 0), vfov, float(WIDTH)/HEIGHT,
-            aperature, focus_distance, time0, time1);
-
-    Hitable *world = final_scene(time0, time1);
+    Camera cam;
+    Hitable *world = marble_scene(cam);
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 

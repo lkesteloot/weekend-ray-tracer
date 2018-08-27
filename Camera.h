@@ -17,6 +17,10 @@ public:
     Vec3 m_y;
     Vec3 m_z;
 
+    Camera() {
+        // Nothing.
+    }
+
     // vfov is vertical in degrees.
     // aspect is width to height;
     Camera(Vec3 look_from, Vec3 look_at, Vec3 vup, float vfov, float aspect,
