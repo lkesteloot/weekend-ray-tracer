@@ -126,6 +126,14 @@ static Hitable *final_scene(float time0, float time1) {
 }
 */
 
+static void add_marble(HitableList *list, const Vec3 &center, float radius, const Vec3 &color) {
+    Material *marble = new Dielectric(REF_GLASS);
+    Hitable *sphere = new Sphere(center, radius, marble);
+
+    list->add(sphere);
+    list->add(new ConstantMedium(sphere, 0.2, new ConstantTexture(color)));
+}
+
 static Hitable *marble_scene(Camera &cam, int frame) {
     int room_width = 3000;
     int room_height = 2500;
@@ -141,7 +149,6 @@ static Hitable *marble_scene(Camera &cam, int frame) {
     Material *table = new Lambertian(new ConstantTexture(Vec3(0.73, 0.73, 0.73)));
     table = new Metal(Vec3(0.73, 0.73, 0.73), 0.5);
     Material *light = new DiffuseLight(new ConstantTexture(Vec3(2, 2, 2)));
-    Material *marble = new Dielectric(REF_GLASS);
 
     float t = frame*2*M_PI/60;
     float s = sin(t);
@@ -157,8 +164,6 @@ static Hitable *marble_scene(Camera &cam, int frame) {
     cam = Camera(look_from, look_at, Vec3(0, 1, 0), vfov, float(WIDTH)/HEIGHT,
             aperature, focus_distance, time0, time1);
 
-    Hitable *sphere = new Sphere(look_at, 10, marble);
-
     HitableList *list = new HitableList;
     // Walls.
     list->add(new XyRect(-room_width/2, room_width/2, 0, room_height, -room_width/2, wall));
@@ -172,9 +177,10 @@ static Hitable *marble_scene(Camera &cam, int frame) {
     list->add(new XzRect(-table_width/2, table_width/2, -table_width/2, table_width/2, table_height, table));
 
     // Marble.
-    if (false) {
-        list->add(sphere);
-        list->add(new ConstantMedium(sphere, 0.2, new ConstantTexture(Vec3(0.6, 0.4, 0.9))));
+    if (true) {
+        add_marble(list, look_at, marble_radius, Vec3(0.6, 0.4, 0.9));
+        add_marble(list, look_at + Vec3(marble_radius*2, 0, marble_radius*2), marble_radius, Vec3(0.9, 0.6, 0.4));
+        add_marble(list, look_at + Vec3(marble_radius*2, 0, -marble_radius*2), marble_radius, Vec3(0.6, 0.9, 0.4));
     } else {
         Material *matte = new Metal(Vec3(0.6, 0.4, 0.9), 0.1);
         list->add(new Sphere(look_at, marble_radius, matte));
