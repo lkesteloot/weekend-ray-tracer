@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <float.h>
 #include <thread>
 #include <unistd.h>
@@ -174,6 +175,10 @@ static Hitable *marble_scene(Camera &cam) {
     } else {
         Material *matte = new Metal(Vec3(0.6, 0.4, 0.9), 0.1);
         list->add(new Sphere(look_at, marble_radius, matte));
+        matte = new Metal(Vec3(0.9, 0.6, 0.4), 0.1);
+        list->add(new Sphere(look_at + Vec3(marble_radius*2, 0, marble_radius*2), marble_radius, matte));
+        matte = new Metal(Vec3(0.6, 0.9, 0.4), 0.1);
+        list->add(new Sphere(look_at + Vec3(marble_radius*2, 0, -marble_radius*2), marble_radius, matte));
     }
 
     // Windows.
@@ -210,7 +215,7 @@ static Vec3 trace_ray(const Ray &r, Hitable *world, int depth) {
 
 // Trace line "j".
 static void trace_line(unsigned char *row, int j, int sample_count, const Camera &cam, Hitable *world) {
-    for (int i = 0; i < WIDTH; i++) {
+    for (int i = 0; i < WIDTH && !g_quit; i++) {
         // Oversample.
         Vec3 c(0, 0, 0);
         for (int s = 0; s < sample_count; s++) {
@@ -335,7 +340,7 @@ int main() {
             }
 
             std::cerr << "Pass with " << sample_count << " samples took " <<
-                pass_timer.elapsed() << " seconds.\n";
+                std::fixed << std::setprecision(1) << pass_timer.elapsed() << " seconds.\n";
 
             // Do another pass with more samples.
             sample_count *= 10;
