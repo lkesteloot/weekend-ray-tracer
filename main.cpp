@@ -29,6 +29,7 @@
 #include "Transform.h"
 #include "ConstantMedium.h"
 #include "Timer.h"
+#include "World.h"
 
 static const int WIDTH = 400;
 static const int HEIGHT = 400;
@@ -70,8 +71,23 @@ static Hitable *cornell_box() {
 }
 */
 
-/*
-static Hitable *final_scene(float time0, float time1) {
+static World *book2_scene(Camera &cam, int frame) {
+    float t = frame*2*M_PI/240;
+    float s = sin(t);
+    float c = cos(t);
+
+    Vec3 look_at = Vec3(278, 278, 0);
+    Vec3 look_from = Vec3(478, 278, -600);
+    look_from = look_at + c*Vec3(200, 0, -600) + s*Vec3(600, 0, 200) + Vec3(0, 0, 0);
+    float focus_distance = 10;
+    float aperature = 0.0;
+    float vfov = 40;
+    float time0 = 0;
+    float time1 = 1;
+
+    cam = Camera(look_from, look_at, Vec3(0, 1, 0), vfov, float(WIDTH)/HEIGHT,
+            aperature, focus_distance, time0, time1);
+
     int nb = 20;
 
     Material *white = new Lambertian(new ConstantTexture(Vec3(0.73, 0.73, 0.73)));
@@ -93,11 +109,12 @@ static Hitable *final_scene(float time0, float time1) {
         }
     }
 
-    Material *light = new DiffuseLight(new ConstantTexture(Vec3(7, 7, 7)));
-
     HitableList *list = new HitableList;
     list->add(new Bvh(box_list, b, time0, time1));
-    list->add(new XzRect(123, 423, 147, 412, 554, light));
+
+    // Area light.
+    Material *light = new DiffuseLight(new ConstantTexture(Vec3(7, 7, 7)));
+    // list->add(new XzRect(123, 423, 147, 412, 554, light));
 
     Vec3 center(400, 400, 200);
     list->add(new MovingSphere(center, center + Vec3(0, 30, 0), 0, 1, 50,
@@ -107,8 +124,8 @@ static Hitable *final_scene(float time0, float time1) {
     Hitable *boundary = new Sphere(Vec3(360, 150, 145), 70, new Dielectric(REF_GLASS));
     list->add(boundary);
     list->add(new ConstantMedium(boundary, 0.2, new ConstantTexture(Vec3(0.2, 0.4, 0.9))));
-    boundary = new Sphere(Vec3(0, 0, 0), 5000, new Dielectric(REF_GLASS));
-    list->add(new ConstantMedium(boundary, 0.0001, new ConstantTexture(Vec3(1, 1, 1))));
+    // boundary = new Sphere(Vec3(0, 0, 0), 5000, new Dielectric(REF_GLASS));
+    // list->add(new ConstantMedium(boundary, 0.0001, new ConstantTexture(Vec3(1, 1, 1))));
     list->add(new Sphere(Vec3(400, 200, 400), 100,
             new Lambertian(new ImageTexture("data/earthmap.jpg"))));
     list->add(new Sphere(Vec3(220, 280, 300), 80, new Lambertian(new NoiseTexture(0.1))));
@@ -122,9 +139,9 @@ static Hitable *final_scene(float time0, float time1) {
     list->add(new Translate(new RotateY(new Bvh(sphere_list, sphere_count, time0, time1), 15),
             Vec3(-100, 270, 395)));
 
-    return list;
+    // return new World(list, Vec3(0, 0, 0));
+    return new World(list, new ImageTexture("data/HDR_111_Parking_Lot_2_Ref.hdr"));
 }
-*/
 
 static void add_marble(HitableList *list, const Vec3 &center, float radius, const Vec3 &color) {
     Material *marble = new Dielectric(REF_GLASS);
@@ -134,7 +151,7 @@ static void add_marble(HitableList *list, const Vec3 &center, float radius, cons
     list->add(new ConstantMedium(sphere, 0.2, new ConstantTexture(color)));
 }
 
-static Hitable *marble_scene(Camera &cam, int frame) {
+static World *marble_scene(Camera &cam, int frame) {
     int room_width = 3000;
     int room_height = 2500;
     int table_width = 1000;
@@ -147,14 +164,15 @@ static Hitable *marble_scene(Camera &cam, int frame) {
 
     Material *wall = new Lambertian(new ConstantTexture(Vec3(0.73, 0.73, 0.73)));
     Material *table = new Lambertian(new ConstantTexture(Vec3(0.73, 0.73, 0.73)));
-    table = new Metal(Vec3(0.73, 0.73, 0.73), 0.5);
+    table = new Metal(Vec3(0.73, 0.73, 0.73), 0.01);
     Material *light = new DiffuseLight(new ConstantTexture(Vec3(2, 2, 2)));
 
     float t = frame*2*M_PI/60;
     float s = sin(t);
     float c = cos(t);
     Vec3 look_at = Vec3(0, table_height + marble_radius, 0);
-    Vec3 look_from = look_at + c*Vec3(0, 0, 50) + s*Vec3(50, 0, 0) + Vec3(0, 40, 0);
+    Vec3 look_from = look_at + c*Vec3(0, 0, 50) + s*Vec3(50, 0, 0) + Vec3(0, 10, 0);
+    // look_from -= (look_at - look_from).unit()*frame*10;
     float focus_distance = (look_at - look_from).length();
     float aperature = 0.0;
     float vfov = 20;
@@ -166,18 +184,24 @@ static Hitable *marble_scene(Camera &cam, int frame) {
 
     HitableList *list = new HitableList;
     // Walls.
-    list->add(new XyRect(-room_width/2, room_width/2, 0, room_height, -room_width/2, wall));
-    list->add(new FlipNormals(new XyRect(-room_width/2, room_width/2, 0, room_height, room_width/2, wall)));
-    list->add(new YzRect(0, room_height, -room_width/2, room_width/2, -room_width/2, wall));
-    list->add(new FlipNormals(new YzRect(0, room_height, -room_width/2, room_width/2, room_width/2, wall)));
-    list->add(new XzRect(-room_width/2, room_width/2, -room_width/2, room_width/2, 0, wall));
-    list->add(new FlipNormals(new XzRect(-room_width/2, room_width/2, -room_width/2, room_width/2, room_height, wall)));
+    if (false) {
+        list->add(new XyRect(-room_width/2, room_width/2, 0, room_height, -room_width/2, wall));
+        list->add(new FlipNormals(new XyRect(-room_width/2, room_width/2, 0, room_height, room_width/2, wall)));
+        list->add(new YzRect(0, room_height, -room_width/2, room_width/2, -room_width/2, wall));
+        list->add(new FlipNormals(new YzRect(0, room_height, -room_width/2, room_width/2, room_width/2, wall)));
+        list->add(new XzRect(-room_width/2, room_width/2, -room_width/2, room_width/2, 0, wall));
+        list->add(new FlipNormals(new XzRect(-room_width/2, room_width/2, -room_width/2, room_width/2, room_height, wall)));
+    }
 
     // Table.
     list->add(new XzRect(-table_width/2, table_width/2, -table_width/2, table_width/2, table_height, table));
 
     // Marble.
-    if (true) {
+    if (false) {
+        Material *matte = new Metal(Vec3(1, 1, 1), 0);
+        matte = new Lambertian(new ConstantTexture(Vec3(1, 1, 1)));
+        list->add(new Sphere(look_at, marble_radius, matte));
+    } else if (true) {
         add_marble(list, look_at, marble_radius, Vec3(0.6, 0.4, 0.9));
         add_marble(list, look_at + Vec3(marble_radius*2, 0, marble_radius*2), marble_radius, Vec3(0.9, 0.6, 0.4));
         add_marble(list, look_at + Vec3(marble_radius*2, 0, -marble_radius*2), marble_radius, Vec3(0.6, 0.9, 0.4));
@@ -191,19 +215,22 @@ static Hitable *marble_scene(Camera &cam, int frame) {
     }
 
     // Windows.
-    list->add(new YzRect(window_height, window_height + window_size, -window_size - window_spacing/2, -window_spacing/2, window_position, light));
-    list->add(new YzRect(window_height, window_height + window_size, window_spacing/2, window_spacing/2 + window_size, window_position, light));
-    list->add(new XyRect(-window_size - window_spacing/2, -window_spacing/2, window_height, window_height + window_size, -window_position, light));
-    list->add(new XyRect(window_spacing/2, window_spacing/2 + window_size, window_height, window_height + window_size, -window_position, light));
+    if (false) {
+        list->add(new YzRect(window_height, window_height + window_size, -window_size - window_spacing/2, -window_spacing/2, window_position, light));
+        list->add(new YzRect(window_height, window_height + window_size, window_spacing/2, window_spacing/2 + window_size, window_position, light));
+        list->add(new XyRect(-window_size - window_spacing/2, -window_spacing/2, window_height, window_height + window_size, -window_position, light));
+        list->add(new XyRect(window_spacing/2, window_spacing/2 + window_size, window_height, window_height + window_size, -window_position, light));
+    }
 
-    return list;
+    // return new World(list, Vec3(.2, .5, .8));
+    return new World(list, new ImageTexture("data/HDR_111_Parking_Lot_2_Ref.hdr"));
 }
 
-static Vec3 trace_ray(const Ray &r, Hitable *world, int depth) {
+static Vec3 trace_ray(const Ray &r, World *world, int depth) {
     HitRecord rec;
     Vec3 color;
 
-    if (world->hit(r, 0.001, MAXFLOAT, rec)) {
+    if (world->m_hitable->hit(r, 0.001, MAXFLOAT, rec)) {
         Ray scattered;
         Vec3 attenuation;
 
@@ -215,15 +242,22 @@ static Vec3 trace_ray(const Ray &r, Hitable *world, int depth) {
             color += attenuation*trace_ray(scattered, world, depth + 1);
         }
     } else {
-        // Black background.
-        color = Vec3(0, 0, 0);
+        if (world->m_background_texture != 0) {
+            // Environment map.
+            float u, v;
+            vector_to_polar(r.direction().unit(), u, v);
+            color = world->m_background_texture->value(u, v, VEC3_ORIGIN);
+        } else {
+            // Plain background.
+            color = world->m_background_color;
+        }
     }
 
     return color;
 }
 
 // Trace line "j".
-static void trace_line(unsigned char *row, int j, int sample_count, const Camera &cam, Hitable *world) {
+static void trace_line(unsigned char *row, int j, int sample_count, const Camera &cam, World *world) {
     for (int i = 0; i < WIDTH && !g_quit; i++) {
         // Oversample.
         Vec3 c(0, 0, 0);
@@ -256,7 +290,7 @@ static void trace_line(unsigned char *row, int j, int sample_count, const Camera
 
 // Trace line "start" and every "skip" lines after that.
 static void trace_lines(unsigned char *image, int start, int skip, int sample_count,
-        const Camera &cam, Hitable *world, int seed) {
+        const Camera &cam, World *world, int seed) {
 
     // Initialize the seed for our thread.
     init_rand(seed);
@@ -294,7 +328,7 @@ int main(int argc, char *argv[]) {
     g_quit = false;
 
     Camera cam;
-    Hitable *world = marble_scene(cam, frame);
+    World *world = book2_scene(cam, frame);
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 

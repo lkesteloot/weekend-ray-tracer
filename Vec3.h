@@ -146,6 +146,9 @@ Vec3 random_in_unit_sphere();
 // In XY plane.
 Vec3 random_in_unit_disc();
 
+// Convert normalized point on sphere to polar coordinates.
+void vector_to_polar(const Vec3 &p, float &u, float &v);
+
 // Thread-safe version of drand48(). Returns [0,1).
 float my_rand();
 void init_rand(int seed);

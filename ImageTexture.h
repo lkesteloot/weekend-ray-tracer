@@ -9,20 +9,12 @@ unsigned char *load_image(char const *pathname, int &width, int &height);
 // A texture with an image.
 class ImageTexture : public Texture {
 public:
-    unsigned char *m_pixels;
+    unsigned char *m_byte_pixels;
+    float *m_float_pixels;
     int m_width;
     int m_height;
 
-    // Pixels should be packed RGB.
-    ImageTexture(unsigned char *pixels, int width, int height)
-        : m_pixels(pixels), m_width(width), m_height(height) {
-
-        // Nothing.
-    }
-
-    ImageTexture(char const *pathname) {
-        m_pixels = load_image(pathname, m_width, m_height);
-    }
+    ImageTexture(char const *pathname);
 
     virtual Vec3 value(float u, float v, const Vec3 &) const {
         // Consider lower-left of image to be its origin.
@@ -34,11 +26,18 @@ public:
         j = std::min(std::max(j, 0), m_height - 1);
 
         int index = 3*(i + m_width*j);
-        float r = m_pixels[index] / 255.0;
-        float g = m_pixels[index + 1] / 255.0;
-        float b = m_pixels[index + 2] / 255.0;
 
-        return Vec3(r, g, b);
+        if (m_float_pixels != 0) {
+            return Vec3(
+                    m_float_pixels[index],
+                    m_float_pixels[index + 1],
+                    m_float_pixels[index + 2]);
+        } else {
+            return Vec3(
+                    m_byte_pixels[index] / 255.0,
+                    m_byte_pixels[index + 1] / 255.0,
+                    m_byte_pixels[index + 2] / 255.0);
+        }
     }
 };
 

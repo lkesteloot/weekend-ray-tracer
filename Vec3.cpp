@@ -36,6 +36,14 @@ Vec3 random_in_unit_disc() {
     return p;
 }
 
+void vector_to_polar(const Vec3 &p, float &u, float &v) {
+    float phi = atan2(p.z(), p.x());
+    float theta = asin(p.y());
+
+    u = 1 - (phi + M_PI) / (2*M_PI);
+    v = (theta + M_PI/2) / M_PI;
+}
+
 bool refract(const Vec3 &v, const Vec3 &n, float ni_over_nt, Vec3 &refracted) {
     float dt = v.dot(n);
     float discriminant = 1 - ni_over_nt*ni_over_nt*(1 - dt*dt);
