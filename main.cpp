@@ -1,6 +1,11 @@
 #include <iostream>
 #include <float.h>
 #include <thread>
+#include <unistd.h>
+
+#ifdef DISPLAY
+#include "MiniFB.h"
+#endif
 
 #include "Sphere.h"
 #include "MovingSphere.h"
@@ -23,10 +28,18 @@
 
 static const int WIDTH = 400;
 static const int HEIGHT = 400;
-static const int STRIDE = WIDTH*3;
+static const int BYTES_PER_PIXEL = 4;
+static const int STRIDE = WIDTH*BYTES_PER_PIXEL;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
-static const int SAMPLE_COUNT = 1000;
+static const int PIXEL_COUNT = WIDTH*HEIGHT;
+static const int SAMPLE_COUNT = 100;
 static const int THREAD_COUNT = 8;
+
+// Whether to quit the program.
+static bool g_quit;
+
+// How many worker threads are still working.
+static std::atomic_int g_working;
 
 /*
 static Hitable *cornell_box() {
@@ -216,10 +229,12 @@ static void trace_line(unsigned char *row, int j, const Camera &cam, Hitable *wo
         int ir = int(255.99*c.r());
         int ig = int(255.99*c.g());
         int ib = int(255.99*c.b());
-        row[0] = ir;
+
+        // minifb wants BGR:
+        row[0] = ib;
         row[1] = ig;
-        row[2] = ib;
-        row += 3;
+        row[2] = ir;
+        row += BYTES_PER_PIXEL;
     }
 }
 
@@ -230,37 +245,82 @@ static void trace_lines(unsigned char *image, int start, int skip,
     // Initialize the seed for our thread.
     init_rand(seed);
 
-    for (int j = start; j < HEIGHT; j += skip) {
+    for (int j = start; j < HEIGHT && !g_quit; j += skip) {
         unsigned char *row = image + j*STRIDE;
 
         trace_line(row, HEIGHT - 1 - j, cam, world);
 
+#ifndef DISPLAY
+        // Progress output.
         if (SAMPLE_COUNT > 100 || j % 100 == 0) {
             std::cerr << j << "\n";
         }
+#endif
     }
+
+    // We're no longer working.
+    g_working--;
 }
 
 int main() {
+    g_quit = false;
+
     Camera cam;
     Hitable *world = marble_scene(cam);
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
+
+#ifdef DISPLAY
+    if (!mfb_open("ray", WIDTH, HEIGHT)) {
+        std::cerr << "Failed to open the display.\n";
+        return 0;
+    }
+#endif
+
+    g_working = THREAD_COUNT;
 
     // Generate the image on multiple threads.
     std::thread *thread[THREAD_COUNT];
     for (int t = 0; t < THREAD_COUNT; t++) {
         thread[t] = new std::thread(trace_lines, image, t, THREAD_COUNT, cam, world, random());
     }
+
+#ifdef DISPLAY
+    while (g_working > 0) {
+        int state = mfb_update(image);
+        if (state < 0) {
+            // Tell workers to quit.
+            g_quit = true;
+        } else {
+            usleep(30*1000);
+        }
+    }
+#endif
+
+    // Wait for worker threads to quit.
     for (int t = 0; t < THREAD_COUNT; t++) {
         thread[t]->join();
         delete thread[t];
         thread[t] = 0;
     }
 
+    // Convert from RGBA to RGB.
+    const int RGB_BYTE_COUNT = PIXEL_COUNT*3;
+    unsigned char *rgb_image = new unsigned char[RGB_BYTE_COUNT];
+    unsigned char *rgba = image;
+    unsigned char *rgb = rgb_image;
+    for (int i = 0; i < PIXEL_COUNT; i++) {
+        rgb[0] = rgba[2];
+        rgb[1] = rgba[1];
+        rgb[2] = rgba[0];
+
+        rgba += 4;
+        rgb += 3;
+    }
+
     // Write image.
     std::cout << "P6 " << WIDTH << " " << HEIGHT << " 255\n";
-    std::cout.write((char *) image, BYTE_COUNT);
+    std::cout.write((char *) rgb_image, RGB_BYTE_COUNT);
 
     return 0;
 }

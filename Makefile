@@ -7,10 +7,17 @@ CPP = $(wildcard *.cpp)
 OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
 DEP = $(OBJ:%.o=%.d)
 IMG = out.ppm
+LIBS = -lm
+LDFLAGS =
+
+# Comment out this section if you don't want minifb for the Mac:
+CXX_FLAGS += -DDISPLAY -Iminifb
+LIBS += -lminifb -framework Cocoa
+LDFLAGS += -Lminifb/build
 
 $(BIN): $(OBJ) Makefile
 	mkdir -p $(@D)
-	$(CXX) $(CXX_FLAGS) $(OBJ) -o $(BIN) -lm
+	$(CXX) $(CXX_FLAGS) $(LDFLAGS) $(OBJ) -o $(BIN) $(LIBS)
 
 -include $(DEP)
 
