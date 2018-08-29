@@ -1,20 +1,25 @@
 
-CXX = clang++
+# CXX = clang++
+# CXX = g++
 CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow -std=c++17 -O3 -ffast-math
 BUILD_DIR = build
 BIN = $(BUILD_DIR)/ray
 CPP = $(wildcard *.cpp)
 OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
 DEP = $(OBJ:%.o=%.d)
-LIBS = -lm
+LIBS = -lm -lpthread
 LDFLAGS =
+BIN_DEPS =
 
-# Comment out this section if you don't want minifb for the Mac:
-CXX_FLAGS += -DDISPLAY -Iminifb
-LIBS += -lminifb -framework Cocoa
-LDFLAGS += -Lminifb/build
+# If you've already built minifb, we'll use it.
+ifneq (,$(wildcard minifb/build/libminifb.a))
+	CXX_FLAGS += -DDISPLAY -Iminifb
+	LIBS += -lminifb -framework Cocoa
+	LDFLAGS += -Lminifb/build
+	BIN_DEPS += minifb/build/libminifb.a
+endif
 
-$(BIN): $(OBJ) minifb/build/libminifb.a Makefile
+$(BIN): $(OBJ) $(BIN_DEPS) Makefile
 	mkdir -p $(@D)
 	$(CXX) $(CXX_FLAGS) $(LDFLAGS) $(OBJ) -o $(BIN) $(LIBS)
 

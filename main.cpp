@@ -3,6 +3,7 @@
 #include <float.h>
 #include <thread>
 #include <unistd.h>
+#include <atomic>
 
 #ifdef DISPLAY
 #include "MiniFB.h"
@@ -114,7 +115,7 @@ static World *book2_scene(Camera &cam, int frame) {
 
     // Area light.
     Material *light = new DiffuseLight(new ConstantTexture(Vec3(7, 7, 7)));
-    // list->add(new XzRect(123, 423, 147, 412, 554, light));
+    list->add(new XzRect(123, 423, 147, 412, 554, light));
 
     Vec3 center(400, 400, 200);
     list->add(new MovingSphere(center, center + Vec3(0, 30, 0), 0, 1, 50,
@@ -124,8 +125,8 @@ static World *book2_scene(Camera &cam, int frame) {
     Hitable *boundary = new Sphere(Vec3(360, 150, 145), 70, new Dielectric(REF_GLASS));
     list->add(boundary);
     list->add(new ConstantMedium(boundary, 0.2, new ConstantTexture(Vec3(0.2, 0.4, 0.9))));
-    // boundary = new Sphere(Vec3(0, 0, 0), 5000, new Dielectric(REF_GLASS));
-    // list->add(new ConstantMedium(boundary, 0.0001, new ConstantTexture(Vec3(1, 1, 1))));
+    boundary = new Sphere(Vec3(0, 0, 0), 5000, new Dielectric(REF_GLASS));
+    list->add(new ConstantMedium(boundary, 0.0001, new ConstantTexture(Vec3(1, 1, 1))));
     list->add(new Sphere(Vec3(400, 200, 400), 100,
             new Lambertian(new ImageTexture("data/earthmap.jpg"))));
     list->add(new Sphere(Vec3(220, 280, 300), 80, new Lambertian(new NoiseTexture(0.1))));
@@ -139,8 +140,8 @@ static World *book2_scene(Camera &cam, int frame) {
     list->add(new Translate(new RotateY(new Bvh(sphere_list, sphere_count, time0, time1), 15),
             Vec3(-100, 270, 395)));
 
-    // return new World(list, Vec3(0, 0, 0));
-    return new World(list, new ImageTexture("data/HDR_111_Parking_Lot_2_Ref.hdr"));
+    return new World(list, Vec3(0, 0, 0));
+    // return new World(list, new ImageTexture("data/HDR_111_Parking_Lot_2_Ref.hdr"));
 }
 
 static void add_marble(HitableList *list, const Vec3 &center, float radius, const Vec3 &color) {
@@ -230,7 +231,7 @@ static Vec3 trace_ray(const Ray &r, World *world, int depth) {
     HitRecord rec;
     Vec3 color;
 
-    if (world->m_hitable->hit(r, 0.001, MAXFLOAT, rec)) {
+    if (world->m_hitable->hit(r, 0.001, FLT_MAX, rec)) {
         Ray scattered;
         Vec3 attenuation;
 
@@ -317,6 +318,11 @@ int main(int argc, char *argv[]) {
     const char *output_pathname = "out.png";
     bool batch = false;
     int sample_count = 1;
+
+#ifndef DISPLAY
+    batch = true;
+    sample_count = 10;
+#endif
 
     if (argc == 4) {
         frame = atoi(argv[1]);
