@@ -1,6 +1,4 @@
 
-# CXX = clang++
-# CXX = g++
 CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow -std=c++17 -O3 -ffast-math
 BUILD_DIR = build
 BIN = $(BUILD_DIR)/ray
@@ -46,3 +44,16 @@ anim: $(BIN) Makefile
 .PHONY: gif
 gif:
 	convert -loop 0 -delay 3 anim/out-*.png out.gif
+
+.PHONY: docker-build
+docker-build: $(BIN)
+	docker build -t ray .
+
+.PHONY: docker-run
+docker-run:
+	docker run -it --name ray-run ray
+
+.PHONY: docker-get
+docker-get:
+	docker cp ray-run:out.png out.png
+
