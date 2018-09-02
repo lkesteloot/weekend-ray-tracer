@@ -31,6 +31,7 @@
 #include "ConstantMedium.h"
 #include "Timer.h"
 #include "World.h"
+#include "animation.h"
 
 static const int WIDTH = 400;
 static const int HEIGHT = 400;
@@ -142,6 +143,21 @@ static World *book2_scene(Camera &cam, int frame) {
 
     return new World(list, Vec3(0, 0, 0));
     // return new World(list, new ImageTexture("data/HDR_111_Parking_Lot_2_Ref.hdr"));
+}
+
+static World *animation_scene(Camera &cam, int frame) {
+    Vec3 look_at = Vec3(0, 1, 0);
+    Vec3 look_from = Vec3(0, 3, -10);
+    float focus_distance = 10;
+    float aperature = 0.0;
+    float vfov = 40;
+    float time0 = 0;
+    float time1 = 1;
+
+    cam = Camera(look_from, look_at, Vec3(0, 1, 0), vfov, float(WIDTH)/HEIGHT,
+            aperature, focus_distance, time0, time1);
+
+    return g_frames[frame];
 }
 
 static void add_marble(HitableList *list, const Vec3 &center, float radius, const Vec3 &color) {
@@ -334,7 +350,8 @@ int main(int argc, char *argv[]) {
     g_quit = false;
 
     Camera cam;
-    World *world = book2_scene(cam, frame);
+    // World *world = book2_scene(cam, frame);
+    World *world = animation_scene(cam, frame);
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 

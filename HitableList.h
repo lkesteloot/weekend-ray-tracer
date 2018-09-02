@@ -13,6 +13,12 @@ public:
         // Nothing.
     }
 
+    HitableList(const std::vector<Hitable *> &list)
+        : m_list(list) {
+
+        // Nothing.
+    }
+
     void add(Hitable *hitable) {
         m_list.push_back(hitable);
     }

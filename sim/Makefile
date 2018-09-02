@@ -8,6 +8,7 @@ OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
 DEP = $(OBJ:%.o=%.d)
 LIBS = -lm -lreactphysics3d
 LDFLAGS = -L$(HOME)/local/lib
+GEN_CPP = ../animation.cpp
 
 $(BIN): $(OBJ) Makefile
 	mkdir -p $(@D)
@@ -19,11 +20,13 @@ $(BUILD_DIR)/%.o: %.cpp Makefile
 	mkdir -p $(@D)
 	$(CXX) $(CXX_FLAGS) -MMD -c $< -o $@
 
+$(GEN_CPP): $(BIN)
+	$(BIN) > $(GEN_CPP)
+
 .PHONY: clean
 clean:
 	rm -rf $(BUILD_DIR)
 
 .PHONY: run
-run: $(BIN)
-	time $(BIN)
+run: $(GEN_CPP)
 

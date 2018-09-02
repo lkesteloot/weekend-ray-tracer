@@ -40,7 +40,7 @@ run: $(BIN)
 anim: $(BIN) Makefile
 	if [ -d anim ]; then rm -r anim; fi
 	mkdir -p anim
-	time for frame in $$(seq -f "%03g" 0 239); do /bin/echo -n "$$frame: "; $(BIN) $$frame anim/out-$$frame.png 100; done
+	time for frame in $$(seq -f "%03g" 0 199); do /bin/echo -n "$$frame: "; $(BIN) $$frame anim/out-$$frame.png 10; done
 
 .PHONY: gif
 gif:
