@@ -55,3 +55,56 @@ bool refract(const Vec3 &v, const Vec3 &n, float ni_over_nt, Vec3 &refracted) {
     // Total internal reflection.
     return false;
 }
+
+// https://stackoverflow.com/a/7901693/211234
+Vec3 hsv2rgb(const Vec3 &hsv) {
+    float h = hsv.e[0];
+    float s = hsv.e[1];
+    float v = hsv.e[2];
+
+    // Unsaturated is just gray.
+    if (s <= 0.0) {
+        return Vec3(v, v, v);
+    }
+
+    // Wrap hue.
+    h = fmodf(h, 1);
+
+    // Find section.
+    h *= 6;
+    int section = (int) h;
+
+    // Find hue within section.
+    h -= section;
+
+    float p = v*(1 - s);
+    float q = v*(1 - s*h);
+    float t = v*(1 - s*(1.0 - h));
+
+    switch(section) {
+        case 0:
+            return Vec3(v, t, p);
+            break;
+
+        case 1:
+            return Vec3(q, v, p);
+            break;
+
+        case 2:
+            return Vec3(p, v, t);
+            break;
+
+        case 3:
+            return Vec3(p, q, v);
+            break;
+
+        case 4:
+            return Vec3(t, p, v);
+            break;
+
+        case 5:
+        default:
+            return Vec3(v, p, q);
+            break;
+    }
+}

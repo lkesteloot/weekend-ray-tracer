@@ -153,6 +153,9 @@ void vector_to_polar(const Vec3 &p, float &u, float &v);
 float my_rand();
 void init_rand(int seed);
 
+// Color functions.
+Vec3 hsv2rgb(const Vec3 &hsv);
+
 static Vec3 VEC3_BLACK = Vec3(0, 0, 0);
 static Vec3 VEC3_ORIGIN = Vec3(0, 0, 0);
 static Vec3 VEC3_ONES = Vec3(1, 1, 1);
