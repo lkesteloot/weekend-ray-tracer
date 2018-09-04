@@ -72,8 +72,7 @@ int main() {
     std::cout << "};\n";
     std::cout << "static Material *g_marblesOut[] = {\n";
     for (int m = 0; m < 5; m++) {
-        // std::cout << "    new Dielectric(REF_GLASS),\n";
-        std::cout << "    new Lambertian(g_color[" << m << "]),\n";
+        std::cout << "    new Dielectric(REF_GLASS),\n";
     }
     std::cout << "};\n";
     std::cout << "\n";
@@ -88,7 +87,11 @@ int main() {
             std::cout << "            new Sphere(Vec3(" <<
                 position.x << ", " <<
                 position.y << ", " <<
-                position.z << "), 1, new Lambertian(new TransformTexture(g_color[" << m <<
+                position.z << "), 1, g_marblesOut[" << m << "]),\n";
+            std::cout << "            new Sphere(Vec3(" <<
+                position.x << ", " <<
+                position.y << ", " <<
+                position.z << "), .95, new Lambertian(new TransformTexture(g_color[" << m <<
                 "], Vec3(" <<
                 position.x << ", " <<
                 position.y << ", " <<
