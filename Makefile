@@ -40,11 +40,15 @@ run: $(BIN)
 anim: $(BIN) Makefile
 	if [ -d anim ]; then rm -r anim; fi
 	mkdir -p anim
-	time for frame in $$(seq -f "%03g" 0 199); do /bin/echo -n "$$frame: "; $(BIN) $$frame anim/out-$$frame.png 10; done
+	time $(BIN) 0,199 anim/out 100
 
 .PHONY: gif
 gif:
 	convert -loop 0 -delay 3 anim/out-*.png out.gif
+
+.PHONY: mp4
+mp4:
+	ffmpeg -pattern_type glob -i 'anim/*.png' -pix_fmt yuv420p -y out.mp4
 
 .PHONY: docker-build
 docker-build: $(BIN)

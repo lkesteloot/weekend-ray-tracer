@@ -1,4 +1,5 @@
 build
-/out.png
+/*.gif
+/*.mp4
+/*.png
 /anim
-*.gif

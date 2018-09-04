@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <float.h>
 #include <thread>
@@ -33,13 +34,28 @@
 #include "World.h"
 #include "animation.h"
 
-static const int WIDTH = 400;
-static const int HEIGHT = 400;
+// How to deal with multiple frames and UI.
+enum InteractiveMode {
+    // All frames, no UI.
+    IM_BATCH,
+
+    // Single frame in UI.
+    IM_SINGLE,
+
+    // All frames in UI.
+    IM_ANIMATION,
+};
+
+// https://support.google.com/youtube/answer/6375112?co=GENIE.Platform%3DDesktop&hl=en&oco=0
+static const int WIDTH = 1280;
+static const int HEIGHT = 720;
 static const int BYTES_PER_PIXEL = 4;
 static const int STRIDE = WIDTH*BYTES_PER_PIXEL;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
 static const int PIXEL_COUNT = WIDTH*HEIGHT;
-static const int THREAD_COUNT = 8;
+
+// Number of threads to use.
+static int g_thread_count;
 
 // Whether to quit the program.
 static bool g_quit;
@@ -73,6 +89,7 @@ static Hitable *cornell_box() {
 }
 */
 
+/*
 static World *book2_scene(Camera &cam, int frame) {
     float t = frame*2*M_PI/240;
     float s = sin(t);
@@ -144,6 +161,7 @@ static World *book2_scene(Camera &cam, int frame) {
     return new World(list, Vec3(0, 0, 0));
     // return new World(list, new ImageTexture("data/HDR_111_Parking_Lot_2_Ref.hdr"));
 }
+*/
 
 static World *animation_scene(Camera &cam, int frame) {
     Vec3 look_at = Vec3(0, 1, 0);
@@ -160,6 +178,7 @@ static World *animation_scene(Camera &cam, int frame) {
     return g_frames[frame];
 }
 
+/*
 static void add_marble(HitableList *list, const Vec3 &center, float radius, const Vec3 &color) {
     Material *marble = new Dielectric(REF_GLASS);
     Hitable *sphere = new Sphere(center, radius, marble);
@@ -242,6 +261,7 @@ static World *marble_scene(Camera &cam, int frame) {
     // return new World(list, Vec3(.2, .5, .8));
     return new World(list, new ImageTexture("data/HDR_111_Parking_Lot_2_Ref.hdr"));
 }
+*/
 
 static Vec3 trace_ray(const Ray &r, World *world, int depth) {
     HitRecord rec;
@@ -276,6 +296,11 @@ static Vec3 trace_ray(const Ray &r, World *world, int depth) {
 // Trace line "j".
 static void trace_line(unsigned char *row, int j, int sample_count, const Camera &cam, World *world) {
     for (int i = 0; i < WIDTH && !g_quit; i++) {
+        // Mark our pixel so it's visible in the interactive version.
+        row[0] = 0;
+        row[1] = 0;
+        row[2] = 0;
+
         // Oversample.
         Vec3 c(0, 0, 0);
         for (int s = 0; s < sample_count; s++) {
@@ -329,25 +354,8 @@ static void trace_lines(unsigned char *image, int start, int skip, int sample_co
     g_working--;
 }
 
-int main(int argc, char *argv[]) {
-    int frame = 0;
-    const char *output_pathname = "out.png";
-    bool batch = false;
-    int sample_count = 1;
-
-#ifndef DISPLAY
-    batch = true;
-    sample_count = 10;
-#endif
-
-    if (argc == 4) {
-        frame = atoi(argv[1]);
-        output_pathname = argv[2];
-        sample_count = atoi(argv[3]);
-        batch = true;
-    }
-
-    g_quit = false;
+void render_frame(int frame, const char *output_pathname, int sample_count,
+        InteractiveMode interactive_mode) {
 
     Camera cam;
     // World *world = book2_scene(cam, frame);
@@ -355,30 +363,23 @@ int main(int argc, char *argv[]) {
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 
-#ifdef DISPLAY
-    if (!batch) {
-        if (!mfb_open("ray", WIDTH, HEIGHT)) {
-            std::cerr << "Failed to open the display.\n";
-            return 0;
-        }
-    }
-#endif
+    g_quit = false;
 
     while (!g_quit) {
-        g_working = THREAD_COUNT;
+        g_working = g_thread_count;
 
         // Time this pass.
         Timer pass_timer;
 
         // Generate the image on multiple threads.
-        std::thread *thread[THREAD_COUNT];
-        for (int t = 0; t < THREAD_COUNT; t++) {
-            thread[t] = new std::thread(trace_lines, image, t, THREAD_COUNT, sample_count,
-                    cam, world, random());
+        std::vector<std::thread *> thread;
+        for (int t = 0; t < g_thread_count; t++) {
+            thread.push_back(new std::thread(trace_lines, image, t, g_thread_count, sample_count,
+                        cam, world, random()));
         }
 
 #ifdef DISPLAY
-        if (!batch) {
+        if (interactive_mode == IM_SINGLE) {
             while (g_working > 0) {
                 int state = mfb_update(image);
                 if (state < 0) {
@@ -392,10 +393,31 @@ int main(int argc, char *argv[]) {
 #endif
 
         // Wait for worker threads to quit.
-        for (int t = 0; t < THREAD_COUNT; t++) {
+        for (int t = 0; t < g_thread_count; t++) {
             thread[t]->join();
             delete thread[t];
             thread[t] = 0;
+        }
+
+#ifdef DISPLAY
+        if (interactive_mode == IM_ANIMATION) {
+            int state = mfb_update(image);
+            if (state < 0) {
+                g_quit = true;
+            }
+        }
+#endif
+
+        if (!g_quit) {
+            double elapsed = pass_timer.elapsed();
+
+            std::cerr << "Frame " << frame << ": Pass with " << sample_count << " samples took " <<
+                std::fixed << std::setprecision(elapsed < 0.2 ? 3 : 1) << elapsed << " seconds.\n";
+        }
+
+        // If we're animating, don't save, just return and do the next frame.
+        if (interactive_mode == IM_ANIMATION) {
+            break;
         }
 
         // Save the image if we weren't interrupted by the user.
@@ -415,22 +437,113 @@ int main(int argc, char *argv[]) {
             }
 
             // Write image.
-            int success = stbi_write_png(output_pathname, WIDTH, HEIGHT, 3, rgb_image, WIDTH*3);
+            std::ostringstream final_pathname;
+            final_pathname << output_pathname << "-" << std::setfill('0') <<
+                std::setw(3) << frame << ".png";
+
+            int success = stbi_write_png(final_pathname.str().c_str(),
+                    WIDTH, HEIGHT, 3, rgb_image, WIDTH*3);
             if (!success) {
                 std::cerr << "Cannot write output image.\n";
             }
 
-            std::cerr << "Pass with " << sample_count << " samples took " <<
-                std::fixed << std::setprecision(1) << pass_timer.elapsed() << " seconds.\n";
-
-            if (batch) {
-                // We're done.
-                g_quit = true;
-            } else {
+            if (interactive_mode == IM_SINGLE) {
                 // Do another pass with more samples.
                 sample_count *= 10;
+            } else {
+                // We're done.
+                break;
             }
         }
+    }
+}
+
+// Format is "first[,last[,step]]". Returns whether successful.
+static bool parse_frames(char *s, int &first_frame, int &last_frame, int &frame_step) {
+    char *orig = s;
+
+    first_frame = strtol(s, &s, 10);
+    if (*s == ',') {
+        s++;
+        last_frame = strtol(s, &s, 10);
+        if (*s == ',') {
+            s++;
+            frame_step = strtol(s, &s, 10);
+            if (*s != '\0') {
+                std::cerr << "Invalid frame specification: " << orig << "\n";
+                return false;
+            }
+        } else {
+            frame_step = 1;
+        }
+    } else {
+        last_frame = first_frame;
+        frame_step = 1;
+    }
+
+    if (last_frame < first_frame) {
+        std::cerr << "Frames cannot be in reverse order: " << orig << "\n";
+        return false;
+    }
+
+    return true;
+}
+
+int main(int argc, char *argv[]) {
+    int first_frame = 0;
+    int last_frame = 0;
+    int frame_step = 0;
+    const char *output_pathname = "out";
+    InteractiveMode interactive_mode;
+    int sample_count = 1;
+
+    // Skip program name
+    argc--;
+    argv++;
+
+    if (argc >= 1) {
+        bool success = parse_frames(argv[0], first_frame, last_frame, frame_step);
+        if (!success) {
+            return -1;
+        }
+        argc--;
+        argv++;
+    }
+
+    if (argc == 2) {
+        // Batch.
+        output_pathname = argv[0];
+        sample_count = atoi(argv[1]);
+        interactive_mode = IM_BATCH;
+    } else {
+#ifdef DISPLAY
+        if (first_frame == last_frame) {
+            interactive_mode = IM_SINGLE;
+        } else {
+            interactive_mode = IM_ANIMATION;
+        }
+#else
+        interactive_mode = IM_BATCH;
+        sample_count = 10;
+#endif
+    }
+
+    std::cout << first_frame << " " << last_frame << " " << frame_step << " " << interactive_mode << "\n";
+
+    g_thread_count = std::thread::hardware_concurrency();
+    std::cout << "Using " << g_thread_count << " threads.\n";
+
+#ifdef DISPLAY
+    if (interactive_mode != IM_BATCH) {
+        if (!mfb_open("ray", WIDTH, HEIGHT)) {
+            std::cerr << "Failed to open the display.\n";
+            return 0;
+        }
+    }
+#endif
+
+    for (int frame = first_frame; frame <= last_frame && !g_quit; frame += frame_step) {
+        render_frame(frame, output_pathname, sample_count, interactive_mode);
     }
 
     return 0;
