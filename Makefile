@@ -40,7 +40,7 @@ run: $(BIN)
 anim: $(BIN) Makefile
 	if [ -d anim ]; then rm -r anim; fi
 	mkdir -p anim
-	time $(BIN) 0,199 anim/out 100
+	time $(BIN) 0,19 anim/out 1000
 
 .PHONY: gif
 gif:

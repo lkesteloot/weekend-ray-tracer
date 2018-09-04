@@ -63,6 +63,9 @@ static bool g_quit;
 // How many worker threads are still working.
 static std::atomic_int g_working;
 
+// How many rows have been done in this image.
+static std::atomic_int g_lines_done;
+
 /*
 static Hitable *cornell_box() {
     Hitable **list = new Hitable*[8];
@@ -342,12 +345,7 @@ static void trace_lines(unsigned char *image, int start, int skip, int sample_co
 
         trace_line(row, HEIGHT - 1 - j, sample_count, cam, world);
 
-#ifndef DISPLAY
-        // Progress output.
-        if (sample_count > 100 || j % 100 == 0) {
-            std::cerr << j << "\n";
-        }
-#endif
+        g_lines_done++;
     }
 
     // We're no longer working.
@@ -367,6 +365,7 @@ void render_frame(int frame, const char *output_pathname, int sample_count,
 
     while (!g_quit) {
         g_working = g_thread_count;
+        g_lines_done = 0;
 
         // Time this pass.
         Timer pass_timer;
@@ -391,6 +390,16 @@ void render_frame(int frame, const char *output_pathname, int sample_count,
             }
         }
 #endif
+
+        if (interactive_mode == IM_BATCH) {
+            while (g_working > 0) {
+                int percent = g_lines_done*100/HEIGHT;
+                std::cout << "\r" << percent << "%";
+                std::cout.flush();
+                usleep(100*1000);
+            }
+            std::cout << "\r              \r";
+        }
 
         // Wait for worker threads to quit.
         for (int t = 0; t < g_thread_count; t++) {
@@ -527,8 +536,6 @@ int main(int argc, char *argv[]) {
         sample_count = 10;
 #endif
     }
-
-    std::cout << first_frame << " " << last_frame << " " << frame_step << " " << interactive_mode << "\n";
 
     g_thread_count = std::thread::hardware_concurrency();
     std::cout << "Using " << g_thread_count << " threads.\n";
