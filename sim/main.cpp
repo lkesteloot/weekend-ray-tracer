@@ -24,8 +24,8 @@ int main() {
     rp3d::DynamicsWorld world(gravity);
 
     // Create the table.
-    rp3d::BoxShape tableShape(rp3d::Vector3(10, 1, 10));
-    rp3d::RigidBody *table = makeTable(world, tableShape);
+    rp3d::BoxShape tableShape(rp3d::Vector3(6, 1, 6));
+    makeTable(world, tableShape);
 
     // Create a sphere.
     rp3d::SphereShape sphereShape(1);
@@ -53,10 +53,16 @@ int main() {
     std::cout << "#include \"Rect.h\"\n";
     std::cout << "#include \"DiffuseLight.h\"\n";
     std::cout << "#include \"ConstantMedium.h\"\n";
+    std::cout << "#include \"CheckerTexture.h\"\n";
+    std::cout << "#include \"Transform.h\"\n";
     std::cout << "\n";
     std::cout << "static Texture *g_color[] = {\n";
     for (int m = 0; m < 5; m++) {
-        std::cout << "    new ConstantTexture(hsv2rgb(Vec3(" << ((float) m / 5) << ", 1, 1))),\n";
+        // std::cout << "    new ConstantTexture(hsv2rgb(Vec3(" << ((float) m / 5) << ", 1, 1))),\n";
+        std::cout << "    new CheckerTexture(\n";
+        std::cout << "        new ConstantTexture(hsv2rgb(Vec3(" << ((float) m / 5) << ", 1, 1))),\n";
+        std::cout << "        new ConstantTexture(hsv2rgb(Vec3(" << ((float) m / 5) << ", .9, 1))),\n";
+        std::cout << "        0.2),\n";
     }
     std::cout << "};\n";
     std::cout << "static Material *g_marblesIn[] = {\n";
@@ -66,7 +72,8 @@ int main() {
     std::cout << "};\n";
     std::cout << "static Material *g_marblesOut[] = {\n";
     for (int m = 0; m < 5; m++) {
-        std::cout << "    new Dielectric(REF_GLASS),\n";
+        // std::cout << "    new Dielectric(REF_GLASS),\n";
+        std::cout << "    new Lambertian(g_color[" << m << "]),\n";
     }
     std::cout << "};\n";
     std::cout << "\n";
@@ -78,11 +85,13 @@ int main() {
             rp3d::Transform transform = marble[m]->getTransform();
             rp3d::Vector3 position = transform.getPosition();
             std::cout << "            new Sphere(Vec3(" << position.x << ", " <<
-                position.y << ", " << position.z << "), 1, g_marblesOut[" << m << "]),\n";
+                position.y << ", " << position.z << "), 1, new Lambertian(new TransformTexture(g_color[" << m << "], Vec3(" << position.x << ", " << position.y << ", " << position.z << ")))),\n";
+            /*
             std::cout << "            new ConstantMedium(new Sphere(Vec3(" << position.x << ", " <<
                 position.y << ", " << position.z << "), 1, g_marblesOut[" << m << "]), 0.8, g_color[" << m << "]),\n";
+                */
         }
-        std::cout << "            new Box(Vec3(-10, -2, -10), Vec3(10, 0, 10), new Lambertian(new ConstantTexture(Vec3(0.3, 0.3, 0.3)))),\n";
+        std::cout << "            new Box(Vec3(-6, -2, -6), Vec3(6, 0, 6), new Lambertian(new ConstantTexture(Vec3(0.3, 0.3, 0.3)))),\n";
         std::cout << "            new XzRect(-5, 5, -5, 5, 10, new DiffuseLight(new ConstantTexture(Vec3(7, 7, 7)))),\n";
         std::cout << "        }), Vec3(.5, .5, .5)),\n";
 

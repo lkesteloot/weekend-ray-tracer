@@ -47,8 +47,8 @@ enum InteractiveMode {
 };
 
 // https://support.google.com/youtube/answer/6375112?co=GENIE.Platform%3DDesktop&hl=en&oco=0
-static const int WIDTH = 1280;
-static const int HEIGHT = 720;
+static const int WIDTH = 1280/2;
+static const int HEIGHT = 720/2;
 static const int BYTES_PER_PIXEL = 4;
 static const int STRIDE = WIDTH*BYTES_PER_PIXEL;
 static const int BYTE_COUNT = STRIDE*HEIGHT;

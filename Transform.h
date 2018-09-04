@@ -2,6 +2,7 @@
 #define TRANSFORM_H
 
 #include "Hitable.h"
+#include "Texture.h"
 
 // Translates another hitable.
 class Translate : public Hitable {
@@ -124,6 +125,25 @@ public:
     virtual bool bounding_box(float, float, Aabb &aabb) const {
         aabb = m_aabb;
         return m_has_aabb;
+    }
+};
+
+// Transforms a texture.
+class TransformTexture : public Texture {
+public:
+    Texture *m_texture;
+    Vec3 m_translate;
+
+    TransformTexture(Texture *texture, const Vec3 &translate)
+        : m_texture(texture), m_translate(translate) {
+
+        // Nothing.
+    }
+
+    virtual Vec3 value(float u, float v, const Vec3 &p) const {
+        Vec3 new_p = p - m_translate;
+
+        return m_texture->value(u, v, new_p);
     }
 };
 
