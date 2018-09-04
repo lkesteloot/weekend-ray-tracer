@@ -52,10 +52,16 @@ int main() {
     std::cout << "#include \"Box.h\"\n";
     std::cout << "#include \"Rect.h\"\n";
     std::cout << "#include \"DiffuseLight.h\"\n";
+    std::cout << "#include \"ConstantMedium.h\"\n";
     std::cout << "\n";
+    std::cout << "static Texture *g_color[] = {\n";
+    for (int m = 0; m < 5; m++) {
+        std::cout << "    new ConstantTexture(hsv2rgb(Vec3(" << ((float) m / 5) << ", 1, 1))),\n";
+    }
+    std::cout << "};\n";
     std::cout << "static Material *g_marblesIn[] = {\n";
     for (int m = 0; m < 5; m++) {
-        std::cout << "    new Lambertian(new ConstantTexture(hsv2rgb(Vec3(" << ((float) m / 5) << ", 1, 1)))),\n";
+        std::cout << "    new Lambertian(g_color[" << m << "]),\n";
     }
     std::cout << "};\n";
     std::cout << "static Material *g_marblesOut[] = {\n";
@@ -73,8 +79,8 @@ int main() {
             rp3d::Vector3 position = transform.getPosition();
             std::cout << "            new Sphere(Vec3(" << position.x << ", " <<
                 position.y << ", " << position.z << "), 1, g_marblesOut[" << m << "]),\n";
-            std::cout << "            new Sphere(Vec3(" << position.x << ", " <<
-                position.y << ", " << position.z << "), 0.95, g_marblesIn[" << m << "]),\n";
+            std::cout << "            new ConstantMedium(new Sphere(Vec3(" << position.x << ", " <<
+                position.y << ", " << position.z << "), 1, g_marblesOut[" << m << "]), 0.8, g_color[" << m << "]),\n";
         }
         std::cout << "            new Box(Vec3(-10, -2, -10), Vec3(10, 0, 10), new Lambertian(new ConstantTexture(Vec3(0.3, 0.3, 0.3)))),\n";
         std::cout << "            new XzRect(-5, 5, -5, 5, 10, new DiffuseLight(new ConstantTexture(Vec3(7, 7, 7)))),\n";

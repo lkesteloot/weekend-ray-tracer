@@ -1,6 +1,8 @@
 #ifndef CONSTANT_MEDIUM_H
 #define CONSTANT_MEDIUM_H
 
+#include <cfloat>
+
 #include "Hitable.h"
 #include "Material.h"
 #include "Isotropic.h"
