@@ -3,6 +3,7 @@
 
 #include "Hitable.h"
 #include "Texture.h"
+#include "Quat.h"
 
 // Translates another hitable.
 class Translate : public Hitable {
@@ -132,16 +133,23 @@ public:
 class TransformTexture : public Texture {
 public:
     Texture *m_texture;
-    Vec3 m_translate;
+    Vec3 m_translation;
+    Quat m_orientation;
+    Quat m_orientation_inv;
 
-    TransformTexture(Texture *texture, const Vec3 &translate)
-        : m_texture(texture), m_translate(translate) {
+    TransformTexture(Texture *texture, const Vec3 &translation, const Quat &orientation)
+        : m_texture(texture), m_translation(translation), m_orientation(orientation),
+            m_orientation_inv(orientation.inv()) {
 
         // Nothing.
     }
 
     virtual Vec3 value(float u, float v, const Vec3 &p) const {
-        Vec3 new_p = p - m_translate;
+        // First translate back to origin.
+        Vec3 new_p = p - m_translation;
+
+        // Then rotate.
+        new_p = (m_orientation_inv*new_p*m_orientation).vec3();
 
         return m_texture->value(u, v, new_p);
     }

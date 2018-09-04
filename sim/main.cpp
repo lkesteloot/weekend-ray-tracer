@@ -84,8 +84,19 @@ int main() {
         for (int m = 0; m < 5; m++) {
             rp3d::Transform transform = marble[m]->getTransform();
             rp3d::Vector3 position = transform.getPosition();
-            std::cout << "            new Sphere(Vec3(" << position.x << ", " <<
-                position.y << ", " << position.z << "), 1, new Lambertian(new TransformTexture(g_color[" << m << "], Vec3(" << position.x << ", " << position.y << ", " << position.z << ")))),\n";
+            rp3d::Quaternion orientation = transform.getOrientation();
+            std::cout << "            new Sphere(Vec3(" <<
+                position.x << ", " <<
+                position.y << ", " <<
+                position.z << "), 1, new Lambertian(new TransformTexture(g_color[" << m <<
+                "], Vec3(" <<
+                position.x << ", " <<
+                position.y << ", " <<
+                position.z << "), Quat(" <<
+                orientation.x << ", " <<
+                orientation.y << ", " <<
+                orientation.z << ", " <<
+                orientation.w << ")))),\n";
             /*
             std::cout << "            new ConstantMedium(new Sphere(Vec3(" << position.x << ", " <<
                 position.y << ", " << position.z << "), 1, g_marblesOut[" << m << "]), 0.8, g_color[" << m << "]),\n";
