@@ -1,13 +1,33 @@
 
+# Which C++ compiler to use. This works for both Clang and G++.
 CXX = c++
-CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow -std=c++11 -O3 -ffast-math
+
+# Location of protobuf include files, library, and compiler.
+PROTOBUF_DIR = /opt/local
+
+CXX_FLAGS = -Wfatal-errors -Wall -Wextra -Wpedantic -Wshadow -std=c++11 -O3 -ffast-math -I$(PROTOBUF_DIR)/include
+
+# Unfortunately protobuf's generated C++ code is pretty crappy, so we have to turn
+# off a bunch of warnings globally.
+CXX_FLAGS += -Wno-nested-anon-types -Wno-unused-parameter -Wno-deprecated-declarations -Wno-sign-compare
+
+# We stick everything in this directory. Easier to ignore (in git) and clean up.
 BUILD_DIR = build
+
+# The binary we build.
 BIN = $(BUILD_DIR)/ray
+
+# Collect all the source files we compile.
+PB_CPP = Scene.pb.cpp
 CPP = $(wildcard *.cpp)
+ifeq (,$(findstring $(PB_CPP),$(CPP)))
+	# Add manually if we've never built it.
+	CPP += $(PB_CPP)
+endif
 OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
 DEP = $(OBJ:%.o=%.d)
-LIBS = -lm -lpthread
-LDFLAGS =
+LIBS = -lm -lpthread -lprotobuf
+LDFLAGS = -L$(PROTOBUF_DIR)/lib
 BIN_DEPS =
 
 # If you've already built minifb, we'll use it.
@@ -22,6 +42,10 @@ $(BIN): $(OBJ) $(BIN_DEPS) Makefile
 	mkdir -p $(@D)
 	$(CXX) $(CXX_FLAGS) $(LDFLAGS) $(OBJ) -o $(BIN) $(LIBS)
 
+Scene.pb.cpp: Scene.proto
+	$(PROTOBUF_DIR)/bin/protoc --cpp_out=. Scene.proto
+	mv Scene.pb.cc Scene.pb.cpp
+
 -include $(DEP)
 
 $(BUILD_DIR)/%.o: %.cpp Makefile
@@ -34,7 +58,7 @@ clean:
 
 .PHONY: run
 run: $(BIN)
-	time $(BIN)
+	time $(BIN) out.scene
 
 .PHONY: anim
 anim: $(BIN) Makefile

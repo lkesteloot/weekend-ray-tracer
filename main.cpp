@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -32,7 +33,7 @@
 #include "ConstantMedium.h"
 #include "Timer.h"
 #include "World.h"
-#include "animation.h"
+#include "Scene.pb.h"
 
 // How to deal with multiple frames and UI.
 enum InteractiveMode {
@@ -166,6 +167,7 @@ static World *book2_scene(Camera &cam, int frame) {
 }
 */
 
+/*
 static World *animation_scene(Camera &cam, int frame) {
     Vec3 look_at = Vec3(0, 1, 0);
     Vec3 look_from = Vec3(0, 3, -10);
@@ -179,6 +181,90 @@ static World *animation_scene(Camera &cam, int frame) {
             aperature, focus_distance, time0, time1);
 
     return g_frames[frame];
+}
+*/
+
+static Vec3 convert_vec3(const Scene::Vec3 &src) {
+    return Vec3(src.x(), src.y(), src.z());
+}
+
+static World *animation_scene(const Scene::Scene &scene, Camera &cam, int frame) {
+    const Scene::World &world = scene.world(frame);
+
+    // Set up camera, if specified.
+    Vec3 look_at;
+    Vec3 look_from;
+    float focus_distance;
+    float aperature;
+    float vertical_fov;
+    if (world.has_camera()) {
+        const Scene::Camera &camera = world.camera();
+
+        look_at = convert_vec3(camera.look_at());
+        look_from = convert_vec3(camera.look_from());
+        focus_distance = (look_at - look_from).length();
+        aperature = camera.aperature();
+        vertical_fov = camera.vertical_fov();
+    } else {
+        look_at = Vec3(0, 1, 0);
+        look_from = Vec3(0, 3, -10);
+        focus_distance = (look_at - look_from).length();
+        aperature = 0.2;
+        vertical_fov = 40;
+    }
+    float time0 = 0;
+    float time1 = 1;
+
+    cam = Camera(look_from, look_at, Vec3(0, 1, 0), vertical_fov, float(WIDTH)/HEIGHT,
+            aperature, focus_distance, time0, time1);
+
+    // Put together Thing list.
+    HitableList *list = new HitableList;
+
+    for (int i = 0; i < world.thing_size(); i++) {
+        const Scene::Thing &thing = world.thing(i);
+
+        Vec3 center = convert_vec3(thing.center());
+        Vec3 half_size = convert_vec3(thing.half_size());
+        Vec3 color = convert_vec3(thing.color());
+
+        Texture *texture = new ConstantTexture(color);
+
+        Material *material = thing.is_light()
+            ? (Material *) new DiffuseLight(texture)
+            : (Material *) new Lambertian(texture);
+
+        Hitable *hitable = nullptr;
+        switch (thing.shape()) {
+            case Scene::SHAPE_SPHERE:
+                hitable = new Sphere(center, half_size.x(), material);
+                break;
+
+            case Scene::SHAPE_BOX:
+                hitable = new Box(center - half_size, center + half_size, material);
+                break;
+
+            case Scene::SHAPE_XZ_RECT:
+                hitable = new XzRect(
+                        center.x() - half_size.x(),
+                        center.x() + half_size.x(),
+                        center.z() - half_size.z(),
+                        center.z() + half_size.z(),
+                        center.y(),
+                        material);
+                break;
+        }
+
+        if (hitable != nullptr) {
+            list->add(hitable);
+        }
+    }
+
+    Vec3 background_color = world.has_background_color()
+        ? convert_vec3(world.background_color())
+        : Vec3(0, 0, 0);
+
+    return new World(list, background_color);
 }
 
 /*
@@ -352,11 +438,11 @@ static void trace_lines(unsigned char *image, int start, int skip, int sample_co
     g_working--;
 }
 
-void render_frame(int frame, const char *output_pathname, int sample_count,
-        InteractiveMode interactive_mode) {
+void render_frame(const Scene::Scene &scene, int frame, const char *output_pathname,
+        int sample_count, InteractiveMode interactive_mode) {
 
     Camera cam;
-    World *world = animation_scene(cam, frame);
+    World *world = animation_scene(scene, cam, frame);
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
 
@@ -497,7 +583,15 @@ static bool parse_frames(char *s, int &first_frame, int &last_frame, int &frame_
     return true;
 }
 
+void usage() {
+    std::cerr << "Usage: ray in.scene [frame [outprefix samples]]\n";
+}
+
 int main(int argc, char *argv[]) {
+    // Make sure we linked with the right protobuf library.
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+    Scene::Scene scene;
     int first_frame = 0;
     int last_frame = 0;
     int frame_step = 0;
@@ -509,7 +603,29 @@ int main(int argc, char *argv[]) {
     argc--;
     argv++;
 
-    if (argc >= 1) {
+    // Required scene name.
+    if (argc == 0) {
+        usage();
+        return -1;
+    }
+    char *scene_pathname = argv[0];
+    argc--;
+    argv++;
+
+    // Read the scene.
+    std::fstream input(scene_pathname, std::ios::in | std::ios::binary);
+    if (!input) {
+        std::cerr << scene_pathname << ": File not found.\n";
+        usage();
+        return -1;
+    }
+
+    if (!scene.ParseFromIstream(&input)) {
+        std::cerr << "Failed to parse scene.\n";
+        return -1;
+    }
+
+    if (argc > 0) {
         bool success = parse_frames(argv[0], first_frame, last_frame, frame_step);
         if (!success) {
             return -1;
@@ -549,7 +665,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     for (int frame = first_frame; frame <= last_frame && !g_quit; frame += frame_step) {
-        render_frame(frame, output_pathname, sample_count, interactive_mode);
+        render_frame(scene, frame, output_pathname, sample_count, interactive_mode);
     }
 
     return 0;

@@ -1,5 +1,8 @@
 
+#include <fstream>
 #include <iostream>
+
+#include "Scene.pb.h"
 
 #include "reactphysics3d.h"
 
@@ -18,14 +21,55 @@ static rp3d::RigidBody *makeTable(rp3d::DynamicsWorld &world, rp3d::BoxShape &ta
     return table;
 }
 
-int main() {
+static void set_vec3(Scene::Vec3 *dest, float x, float y, float z) {
+    dest->set_x(x);
+    dest->set_y(y);
+    dest->set_z(z);
+}
+
+static void copy_vec3(Scene::Vec3 *dest, const rp3d::Vector3 &src) {
+    set_vec3(dest, src.x, src.y, src.z);
+}
+
+static void set_quat(Scene::Quat *dest, float x, float y, float z, float w) {
+    dest->set_x(x);
+    dest->set_y(y);
+    dest->set_z(z);
+    dest->set_w(w);
+}
+
+static void copy_quat(Scene::Quat *dest, const rp3d::Quaternion &src) {
+    set_quat(dest, src.x, src.y, src.z, src.w);
+}
+
+void usage() {
+    std::cerr << "Usage: sim out.scene\n";
+}
+
+
+int main(int argc, char *argv[]) {
+    Scene::Scene scene;
+
+    // Skip program name
+    argc--;
+    argv++;
+
+    // Required scene name.
+    if (argc == 0) {
+        usage();
+        return -1;
+    }
+    char *scene_pathname = argv[0];
+    argc--;
+    argv++;
+
     // Create the dynamics world
     rp3d::Vector3 gravity(0.0, -9.81, 0.0);
-    rp3d::DynamicsWorld world(gravity);
+    rp3d::DynamicsWorld dynamicsWorld(gravity);
 
     // Create the table.
     rp3d::BoxShape tableShape(rp3d::Vector3(6, 1, 6));
-    makeTable(world, tableShape);
+    makeTable(dynamicsWorld, tableShape);
 
     // Create a sphere.
     rp3d::SphereShape sphereShape(1);
@@ -35,27 +79,14 @@ int main() {
                 rp3d::Vector3((m - 2)/10.0, 3 + m*4, 0),
                 rp3d::Quaternion::identity());
 
-        marble[m] = world.createRigidBody(transform);
+        marble[m] = dynamicsWorld.createRigidBody(transform);
         marble[m]->setType(rp3d::BodyType::DYNAMIC);
 
         marble[m]->addCollisionShape(&sphereShape, rp3d::Transform::identity(), 4);
     }
 
+    /*
     // Generate header.
-    std::cout << "// This file is auto-generated. See the \"sim\" directory. Do not modify.\n";
-    std::cout << "\n";
-    std::cout << "#include \"animation.h\"\n";
-    std::cout << "#include \"HitableList.h\"\n";
-    std::cout << "#include \"Lambertian.h\"\n";
-    std::cout << "#include \"ConstantTexture.h\"\n";
-    std::cout << "#include \"Dielectric.h\"\n";
-    std::cout << "#include \"Box.h\"\n";
-    std::cout << "#include \"Rect.h\"\n";
-    std::cout << "#include \"DiffuseLight.h\"\n";
-    std::cout << "#include \"ConstantMedium.h\"\n";
-    std::cout << "#include \"CheckerTexture.h\"\n";
-    std::cout << "#include \"Transform.h\"\n";
-    std::cout << "\n";
     std::cout << "static Texture *g_color[] = {\n";
     for (int m = 0; m < 5; m++) {
         // std::cout << "    new ConstantTexture(hsv2rgb(Vec3(" << ((float) m / 5) << ", 1, 1))),\n";
@@ -77,43 +108,58 @@ int main() {
     std::cout << "};\n";
     std::cout << "\n";
     std::cout << "std::vector<World *> g_frames = {\n";
+    */
 
     for (int f = 0; f < 200; f++) {
-        std::cout << "    new World(new HitableList({\n";
+        Scene::World *world = scene.add_world();
+
+        set_vec3(world->mutable_background_color(), 0.5, 0.5, 0.5);
+
         for (int m = 0; m < 5; m++) {
             rp3d::Transform transform = marble[m]->getTransform();
             rp3d::Vector3 position = transform.getPosition();
             rp3d::Quaternion orientation = transform.getOrientation();
-            std::cout << "            new Sphere(Vec3(" <<
-                position.x << ", " <<
-                position.y << ", " <<
-                position.z << "), 1, g_marblesOut[" << m << "]),\n";
-            std::cout << "            new Sphere(Vec3(" <<
-                position.x << ", " <<
-                position.y << ", " <<
-                position.z << "), .95, new Lambertian(new TransformTexture(g_color[" << m <<
-                "], Vec3(" <<
-                position.x << ", " <<
-                position.y << ", " <<
-                position.z << "), Quat(" <<
-                orientation.x << ", " <<
-                orientation.y << ", " <<
-                orientation.z << ", " <<
-                orientation.w << ")))),\n";
-            /*
-            std::cout << "            new ConstantMedium(new Sphere(Vec3(" << position.x << ", " <<
-                position.y << ", " << position.z << "), 1, g_marblesOut[" << m << "]), 0.8, g_color[" << m << "]),\n";
-                */
+
+            Scene::Thing *thing = world->add_thing();
+            thing->set_shape(Scene::SHAPE_SPHERE);
+            copy_vec3(thing->mutable_center(), position);
+            set_vec3(thing->mutable_half_size(), 1, 1, 1);
+            copy_quat(thing->mutable_orientation(), orientation);
+            set_vec3(thing->mutable_color(), 1, 0, 0);
+            thing->set_is_light(false);
         }
-        std::cout << "            new Box(Vec3(-6, -2, -6), Vec3(6, 0, 6), new Lambertian(new ConstantTexture(Vec3(0.3, 0.3, 0.3)))),\n";
-        std::cout << "            new XzRect(-5, 5, -5, 5, 10, new DiffuseLight(new ConstantTexture(Vec3(7, 7, 7)))),\n";
-        std::cout << "        }), Vec3(.5, .5, .5)),\n";
+
+        // Table.
+        {
+            Scene::Thing *thing = world->add_thing();
+            thing->set_shape(Scene::SHAPE_BOX);
+            set_vec3(thing->mutable_center(), 0, -1, 0);
+            set_vec3(thing->mutable_half_size(), 6, 1, 6);
+            set_quat(thing->mutable_orientation(), 0, 0, 0, 1);
+            set_vec3(thing->mutable_color(), 0.3, 0.3, 0.3);
+            thing->set_is_light(false);
+        }
+
+        // Light.
+        {
+            Scene::Thing *thing = world->add_thing();
+            thing->set_shape(Scene::SHAPE_XZ_RECT);
+            set_vec3(thing->mutable_center(), 0, 10, 0);
+            set_vec3(thing->mutable_half_size(), 5, 0, 5);
+            set_quat(thing->mutable_orientation(), 0, 0, 0, 1);
+            set_vec3(thing->mutable_color(), 7, 7, 7);
+            thing->set_is_light(true);
+        }
 
         // Match GIF delay (3/100).
-        world.update(0.030);
+        dynamicsWorld.update(0.030);
     }
 
-    std::cout << "};\n";
+    std::fstream output(scene_pathname, std::ios::out | std::ios::trunc | std::ios::binary);
+    if (!scene.SerializeToOstream(&output)) {
+        std::cerr << "Failed to write scene to " << scene_pathname << "\n";
+        return -1;
+    }
 
     return 0;
 }

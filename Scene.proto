@@ -1,0 +1,62 @@
+
+package Scene;
+
+// Shape of the thing.
+enum Shape {
+    SHAPE_SPHERE = 1;
+    SHAPE_BOX = 2;
+    SHAPE_XY_RECT = 3;
+    SHAPE_XZ_RECT = 4;
+    SHAPE_YZ_RECT = 5;
+}
+
+// A 3D vector.
+message Vec3 {
+    required float x = 1;
+    required float y = 2;
+    required float z = 3;
+}
+
+// A quaternion.
+message Quat {
+    // Vector.
+    required float x = 1;
+    required float y = 2;
+    required float z = 3;
+
+    // Real.
+    required float w = 4;
+}
+
+// Camera position.
+message Camera {
+    optional Vec3 look_from = 1;
+    optional Vec3 look_at = 2;
+    optional float aperature = 3;
+    optional float vertical_fov = 4;
+}
+
+// An object. We avoid the word "Object" because it's used in some languages.
+message Thing {
+    optional Shape shape = 1;
+    optional Vec3 center = 2;
+    optional Vec3 half_size = 3;
+    optional Quat orientation = 4;
+    optional Vec3 color = 5;
+    optional bool is_light = 6;
+}
+
+// The entire world.
+message World {
+    // Black if missing.
+    optional Vec3 background_color = 1;
+
+    // If the camera is missing, the renderer can make its own.
+    optional Camera camera = 2;
+    repeated Thing thing = 3;
+}
+
+// Sequence of worlds, one per frame.
+message Scene {
+    repeated World world = 1;
+}
