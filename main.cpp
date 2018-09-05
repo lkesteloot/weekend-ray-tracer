@@ -169,8 +169,8 @@ static World *book2_scene(Camera &cam, int frame) {
 static World *animation_scene(Camera &cam, int frame) {
     Vec3 look_at = Vec3(0, 1, 0);
     Vec3 look_from = Vec3(0, 3, -10);
-    float focus_distance = 10;
-    float aperature = 0.0;
+    float focus_distance = (look_at - look_from).length();
+    float aperature = 0.2;
     float vfov = 40;
     float time0 = 0;
     float time1 = 1;
@@ -356,7 +356,6 @@ void render_frame(int frame, const char *output_pathname, int sample_count,
         InteractiveMode interactive_mode) {
 
     Camera cam;
-    // World *world = book2_scene(cam, frame);
     World *world = animation_scene(cam, frame);
 
     unsigned char *image = new unsigned char[BYTE_COUNT];
