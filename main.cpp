@@ -253,6 +253,11 @@ static World *animation_scene(const Scene::Scene &scene, Camera &cam, int frame)
                         center.y(),
                         material);
                 break;
+
+            case Scene::SHAPE_XY_RECT:
+            case Scene::SHAPE_YZ_RECT:
+                // To do.
+                break;
         }
 
         if (hitable != nullptr) {

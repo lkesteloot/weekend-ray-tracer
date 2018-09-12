@@ -21,17 +21,13 @@ a file that's used by the renderer.
     % cd sim
     % make run
 
-# Live preview
-
-Compile the `minifb` directory first to get a live preview from the renderer.
-
-    % cd minifb
-    % make
-
 # Build
 
-Build the renderer using the Makefile:
+Build the renderer using CMake:
 
+    % mkdir build
+    % cd build
+    % cmake ..
     % make
 
 It compiles on MacOS and Linux.
