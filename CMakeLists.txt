@@ -18,7 +18,7 @@ link_libraries(m pthread)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS Scene.proto)
 
 # Our source files.
-file(GLOB SOURCES "*.cpp")
+file(GLOB SOURCES "src/*.cpp")
 
 set(SOURCES ${SOURCES} ${PROTO_SRCS})
 
@@ -27,7 +27,7 @@ if (APPLE)
     message ("-- Adding minifb to display rendered images")
 
     # Add source files.
-    file(GLOB MINIFB_SOURCES "*.cpp" "minifb/*.m")
+    file(GLOB MINIFB_SOURCES "src/minifb/*.m")
     set(SOURCES ${SOURCES} ${MINIFB_SOURCES})
 
     # Need the Cocoa framework.
@@ -50,6 +50,6 @@ target_include_directories(ray PRIVATE ${PROTOBUF_INCLUDE_DIRS} ${CMAKE_CURRENT_
 target_link_libraries(ray PRIVATE ${PROTOBUF_LIBRARIES})
 
 if (APPLE)
-    target_include_directories(ray PRIVATE minifb)
+    target_include_directories(ray PRIVATE src/minifb)
     target_link_libraries(ray PRIVATE ${COCOA_LIBRARY})
 endif()
