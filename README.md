@@ -71,15 +71,16 @@ in batch mode:
 
     % build/ray 0,199 anim/out 1000
 
-No UI will be shown. The files will be called `anim/out-XXX.png`, etc. Use
-one of these Makefile targets to combine the images into a single file:
+No UI will be shown. The files will be called `anim/out-XXX.png` where
+`XXX` is the frame number. Use one of these Makefile targets to combine the
+images into a single file:
 
     % make gif
     % make mp4
 
 # Attributions
 
-The original rendering code is almost a copy of the original in Peter Shirley's
+The original rendering code is almost a copy of the one in Peter Shirley's
 books.
 
 The `stb_image.h` and `stb_image_write.h` image reading and writing headers are
