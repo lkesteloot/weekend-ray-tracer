@@ -11,34 +11,18 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfatal-errors -Wall -Wextra -Wpedantic 
 # off a bunch of warnings globally.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-nested-anon-types -Wno-unused-parameter -Wno-deprecated-declarations -Wno-sign-compare")
 
-# What to link with.
-link_libraries(m pthread)
-
-# Generate protobuf files.
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS Scene.proto)
-
 # Our source files.
 file(GLOB SOURCES "src/*.cpp")
 
+# Generate protobuf files.
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS Scene.proto)
 set(SOURCES ${SOURCES} ${PROTO_SRCS})
-
-# If we're on MacOS, add minifb.
-if (APPLE)
-    message ("-- Adding minifb to display rendered images")
-
-    # Add source files.
-    file(GLOB MINIFB_SOURCES "src/minifb/*.m")
-    set(SOURCES ${SOURCES} ${MINIFB_SOURCES})
-
-    # Need the Cocoa framework.
-    find_library(COCOA_LIBRARY Cocoa)
-
-    # Tell our code to use it.
-    add_definitions(-DDISPLAY)
-endif()
 
 # Our binary.
 add_executable(ray ${SOURCES})
+
+# What to link with.
+target_link_libraries(ray m pthread ${PROTOBUF_LIBRARIES})
 
 # We need these C++ features.
 target_compile_features(ray PRIVATE cxx_long_long_type cxx_thread_local)
@@ -46,10 +30,18 @@ target_compile_features(ray PRIVATE cxx_long_long_type cxx_thread_local)
 # Look for the standard protobuf headers, as well as the one we generated.
 target_include_directories(ray PRIVATE ${PROTOBUF_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 
-# Link with the protobuf library.
-target_link_libraries(ray PRIVATE ${PROTOBUF_LIBRARIES})
-
+# If we're on MacOS, add minifb.
 if (APPLE)
-    target_include_directories(ray PRIVATE src/minifb)
-    target_link_libraries(ray PRIVATE ${COCOA_LIBRARY})
+    message ("-- Adding minifb to display rendered images")
+
+    # Add the library directory.
+    add_subdirectory(src/minifb)
+
+    # Tell our code to use it.
+    target_compile_definitions(ray PRIVATE DISPLAY)
+    target_include_directories(ray PRIVATE ${minifb_SOURCE_DIR})
+
+    # Need the Cocoa framework.
+    find_library(COCOA_LIBRARY Cocoa)
+    target_link_libraries(ray minifb ${COCOA_LIBRARY})
 endif()
