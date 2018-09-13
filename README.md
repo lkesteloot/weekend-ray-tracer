@@ -22,7 +22,10 @@ Build the renderer using CMake:
     % cmake ..
     % make
 
-It compiles on MacOS and Linux.
+It compiles on MacOS and Linux. You'll need the protobuf compiler
+and library:
+
+    % sudo apt-get install protobuf-compiler libprotobuf-dev
 
 # Simulation
 
