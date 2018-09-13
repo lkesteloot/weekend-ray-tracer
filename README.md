@@ -13,14 +13,6 @@ The tag `book2` generates this image:
 
 ![book2](images/book2.png)
 
-# Simulation
-
-The `sim` directory runs a physical simulation of some marbles. It generates
-a file that's used by the renderer.
-
-    % cd sim
-    % make run
-
 # Build
 
 Build the renderer using CMake:
@@ -32,6 +24,21 @@ Build the renderer using CMake:
 
 It compiles on MacOS and Linux.
 
+# Simulation
+
+The `sim` program runs a physical simulation of some marbles. It generates
+a file that's used by the renderer. To build it, enable the `BUILD_SIM`
+CMake option. Instead of the above `cmake ..` command, use this:
+
+    % cmake .. -DBUILD_SIM=ON -DRP3D_DIR=$HOME/reactphysics3d
+
+Point the `RP3D_DIR` option to wherever you unpacked the
+[ReactPhysics3D](https://www.reactphysics3d.com/) library.
+
+Then run it:
+
+    % build/src/sim/sim out.scene
+
 # Rendering
 
 There are three ways to run the renderer:
@@ -40,7 +47,7 @@ There are three ways to run the renderer:
 
 Run the renderer with a frame number (defaulting to 0):
 
-    % build/ray 40
+    % build/src/ray/ray 40
 
 This will bring up a window (in MacOS) showing the frame rendered with one
 sample per pixel. This will be very grainy, but should take less than one
@@ -53,7 +60,7 @@ for each pass, where `XXX` is the frame number. Press `Esc` to quit.
 Specify a range of frames to render them interactively with one sample per
 pixel:
 
-    % build/ray 0,199
+    % build/src/ray/ray 0,199
 
 The frame specifier is `first[,last[,step]]` where `step` defaults to 1 and
 `last` defaults to `first`. This runs in near-real-time (about 30 FPS)
@@ -65,7 +72,7 @@ Press `Esc` to quit.
 Specify an output file prefix and a number of samples to run the program
 in batch mode:
 
-    % build/ray 0,199 anim/out 1000
+    % build/src/ray/ray 0,199 anim/out 1000
 
 No UI will be shown. The files will be called `anim/out-XXX.png` where
 `XXX` is the frame number. Use one of these Makefile targets to combine the

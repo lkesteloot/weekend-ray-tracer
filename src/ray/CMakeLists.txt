@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 3.5)
-project (ray)
+cmake_minimum_required(VERSION 3.5)
+project(ray)
 
 # We need protobuf.
 find_package(Protobuf REQUIRED)
@@ -27,8 +27,8 @@ target_compile_features(ray PRIVATE cxx_long_long_type cxx_thread_local)
 target_include_directories(ray PRIVATE ${PROTOBUF_INCLUDE_DIRS} ${scene_BINARY_DIR})
 
 # If we're on MacOS, add minifb.
-if (APPLE)
-    message ("-- Adding minifb to display rendered images")
+if(APPLE)
+    message("-- Adding minifb to display rendered images")
 
     # Add the library directory.
     add_subdirectory(../minifb minifb)
