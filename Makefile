@@ -15,7 +15,13 @@ help:
 rebuild-all:
 	rm -rf build
 	mkdir build
-	(cd build && cmake -G Ninja -D BUILD_SIM=YES .. && ninja)
+	(cd build && cmake -D BUILD_SIM=YES .. && make -j)
+
+.PHONY: rebuild-no-sim
+rebuild-no-sim:
+	rm -rf build
+	mkdir build
+	(cd build && cmake -D BUILD_SIM=NO .. && make -j)
 
 .PHONY: run-proxy
 run-proxy:
