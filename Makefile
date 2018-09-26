@@ -27,7 +27,7 @@ run-worker:
 
 .PHONY: run-sim
 run-sim:
-	build/src/sim build/out.scene
+	build/src/sim/sim build/out.scene
 
 .PHONY: run-controller
 run-controller:
