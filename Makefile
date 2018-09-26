@@ -1,4 +1,39 @@
 
+# This Makefile is really just a bunch of short shell scripts.
+
+# Location of distray binary.
+DISTRAY=../distray/build/src/distray
+
+# Proxy hostname. Specify this on the command line.
+PROXY=unspecified
+
+.PHONY: help
+help:
+	@echo "See Makefile for list of targets."
+
+.PHONY: rebuild-all
+rebuild-all:
+	rm -rf build
+	mkdir build
+	(cd build && cmake -G Ninja -D BUILD_SIM=YES .. && ninja)
+
+.PHONY: run-proxy
+run-proxy:
+	$(DISTRAY) proxy
+
+.PHONY: run-worker
+run-worker:
+	$(DISTRAY) worker $(PROXY)
+
+.PHONY: run-sim
+run-sim:
+	build/src/sim build/out.scene
+
+.PHONY: run-controller
+run-controller:
+	mkdir -p anim
+	$(DISTRAY) controller --proxy $(PROXY) --in build/out.scene out.scene --out out-%03d.png anim/out-%03d.png 0,199 build/src/ray/ray out.scene %d out 10
+
 .PHONY: gif
 gif:
 	convert -loop 0 -delay 3 anim/out-*.png out.gif
