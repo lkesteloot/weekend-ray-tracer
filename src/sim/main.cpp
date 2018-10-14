@@ -11,6 +11,8 @@ using namespace reactphysics3d;
 const float REF_AIR = 1;
 const float REF_GLASS = 1.5;  // 1.3 to 1.7
 const float REF_DIAMOND = 2.4;
+const int MARBLE_COUNT = 20;
+const float MARBLE_RADIUS = 1;
 
 static rp3d::RigidBody *makeTable(rp3d::DynamicsWorld &world, rp3d::BoxShape &tableShape) {
     rp3d::Transform transform(
@@ -176,9 +178,9 @@ int main(int argc, char *argv[]) {
     makeTable(dynamicsWorld, tableShape);
 
     // Create a sphere.
-    rp3d::SphereShape sphereShape(1);
-    rp3d::RigidBody *marble[5];
-    for (int m = 0; m < 5; m++) {
+    rp3d::SphereShape sphereShape(MARBLE_RADIUS);
+    rp3d::RigidBody *marble[MARBLE_COUNT];
+    for (int m = 0; m < MARBLE_COUNT; m++) {
         rp3d::Transform transform(
                 rp3d::Vector3((m - 2)/10.0, 3 + m*4, 0),
                 rp3d::Quaternion::identity());
@@ -192,9 +194,17 @@ int main(int argc, char *argv[]) {
     for (int f = 0; f < 200; f++) {
         Scene::World *world = scene.add_world();
 
+        // Set up camera.
+        Scene::Camera *camera = world->mutable_camera();
+        camera->set_allocated_look_at(make_vec3(0, 1, 0));
+        camera->set_allocated_look_from(make_vec3(0, 3, -10 - f/10.0));
+        camera->set_aperature(0.2);
+        camera->set_vertical_fov(20);
+
+        // Neutral background.
         world->set_allocated_background_color(make_vec3(0.5, 0.5, 0.5));
 
-        for (int m = 0; m < 5; m++) {
+        for (int m = 0; m < MARBLE_COUNT; m++) {
             rp3d::Transform transform = marble[m]->getTransform();
             rp3d::Vector3 position = transform.getPosition();
             rp3d::Quaternion orientation = transform.getOrientation();
@@ -203,18 +213,18 @@ int main(int argc, char *argv[]) {
             Scene::Thing *thing = world->add_thing();
             thing->set_shape(Scene::SHAPE_SPHERE);
             thing->set_allocated_center(from_vector3(position));
-            thing->set_allocated_half_size(make_vec3(1, 1, 1));
+            thing->set_allocated_half_size(make_vec3(MARBLE_RADIUS, MARBLE_RADIUS, MARBLE_RADIUS));
             thing->set_allocated_material(make_dielectric_material(REF_GLASS));
 
             // Internal (diffuse) sphere.
             thing = world->add_thing();
             thing->set_shape(Scene::SHAPE_SPHERE);
             thing->set_allocated_center(from_vector3(position));
-            thing->set_allocated_half_size(make_vec3(0.95, 0.95, 0.95));
+            thing->set_allocated_half_size(make_vec3(MARBLE_RADIUS*0.95, MARBLE_RADIUS*0.95, MARBLE_RADIUS*0.95));
             thing->set_allocated_orientation(from_quaternion(orientation));
             thing->set_allocated_material(make_lambertian_material(
                     make_transform_texture(
-                        make_marble_texture(m/5.0),
+                        make_marble_texture(float(m)/MARBLE_COUNT),
                         from_vector3(position),
                         from_quaternion(orientation))));
         }
