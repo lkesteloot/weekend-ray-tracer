@@ -4,6 +4,7 @@
 #include "Ray.h"
 #include "HitRecord.h"
 
+// Base class for materials.
 class Material {
 public:
     // Returns whether to follow ray_out.

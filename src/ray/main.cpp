@@ -48,8 +48,8 @@ enum InteractiveMode {
 };
 
 // https://support.google.com/youtube/answer/6375112?co=GENIE.Platform%3DDesktop&hl=en&oco=0
-static const int WIDTH = 1280;
-static const int HEIGHT = 720;
+static const int WIDTH = 1280/2;
+static const int HEIGHT = 720/2;
 static const int BYTES_PER_PIXEL = 4;
 static const int STRIDE = WIDTH*BYTES_PER_PIXEL;
 static const int BYTE_COUNT = STRIDE*HEIGHT;
@@ -188,6 +188,73 @@ static Vec3 convert_vec3(const Scene::Vec3 &src) {
     return Vec3(src.x(), src.y(), src.z());
 }
 
+static Quat convert_quat(const Scene::Quat &src) {
+    return Quat(src.x(), src.y(), src.z(), src.w());
+}
+
+static Texture *convert_texture(const Scene::Texture &src) {
+    Texture *texture = nullptr;
+
+    switch (src.texture_type()) {
+        case Scene::TEXTURE_CONSTANT:
+            texture = new ConstantTexture(convert_vec3(src.color()));
+            break;
+
+        case Scene::TEXTURE_CHECKER:
+            texture = new CheckerTexture(
+                    convert_texture(src.odd()),
+                    convert_texture(src.even()),
+                    src.size());
+            break;
+
+        case Scene::TEXTURE_IMAGE:
+            // To do.
+            break;
+
+        case Scene::TEXTURE_NOISE:
+            // To do.
+            break;
+
+        case Scene::TEXTURE_TRANSFORM:
+            texture = new TransformTexture(
+                    convert_texture(src.sub_texture()),
+                    convert_vec3(src.translation()),
+                    convert_quat(src.orientation()));
+            break;
+    }
+
+    return texture;
+}
+
+static Material *convert_material(const Scene::Material &src) {
+    Material *material = nullptr;
+
+    switch (src.material_type()) {
+        case Scene::MATERIAL_LAMBERTIAN:
+            material = new Lambertian(convert_texture(src.texture()));
+            break;
+
+        case Scene::MATERIAL_DIELECTRIC:
+            material = new Dielectric(src.refraction_index());
+            break;
+
+        case Scene::MATERIAL_METAL:
+            // To do.
+            break;
+
+        case Scene::MATERIAL_DIFFUSE_LIGHT:
+            material = new DiffuseLight(convert_texture(src.texture()));
+            break;
+
+        case Scene::MATERIAL_ISOTROPIC:
+            // To do.
+            break;
+    }
+
+    return material;
+}
+
+// Load a world from a protobuf scene.
 static World *animation_scene(const Scene::Scene &scene, Camera &cam, int frame) {
     const Scene::World &world = scene.world(frame);
 
@@ -226,13 +293,7 @@ static World *animation_scene(const Scene::Scene &scene, Camera &cam, int frame)
 
         Vec3 center = convert_vec3(thing.center());
         Vec3 half_size = convert_vec3(thing.half_size());
-        Vec3 color = convert_vec3(thing.color());
-
-        Texture *texture = new ConstantTexture(color);
-
-        Material *material = thing.is_light()
-            ? (Material *) new DiffuseLight(texture)
-            : (Material *) new Lambertian(texture);
+        Material *material = convert_material(thing.material());
 
         Hitable *hitable = nullptr;
         switch (thing.shape()) {

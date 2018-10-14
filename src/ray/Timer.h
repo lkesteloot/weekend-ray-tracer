@@ -14,6 +14,7 @@ public:
         m_start_time = steady_clock::now();
     }
 
+    // Returns elapsed time in seconds since object creation.
     double elapsed() const {
         steady_clock::time_point now = steady_clock::now();
 

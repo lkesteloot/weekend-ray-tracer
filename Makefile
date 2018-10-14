@@ -38,7 +38,7 @@ run-sim:
 .PHONY: run-controller
 run-controller:
 	mkdir -p anim
-	$(DISTRAY) controller --proxy $(PROXY) --in build/out.scene out.scene --out out-%03d.png anim/out-%03d.png 0,199 build/src/ray/ray out.scene %d out 10
+	$(DISTRAY) controller --proxy $(PROXY) --in build/out.scene out.scene --out out-%03d.png anim/out-%03d.png 0,199 build/src/ray/ray out.scene %d out 1000
 
 .PHONY: gif
 gif:
